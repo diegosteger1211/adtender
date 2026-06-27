@@ -63,7 +63,7 @@ export default function LoginPage() {
         />
         {/* Logo */}
         <div className="relative z-10">
-          <img src="/adtender-logo.png" alt="adtender" className="h-10 w-auto object-contain" />
+          <img src="/adtender-logo.png" alt="adtender" className="h-16 w-auto object-contain" />
         </div>
 
         {/* Center content */}
