@@ -7,7 +7,6 @@ import {
   LogOut, ChevronDown, ChevronRight, Briefcase,
 } from 'lucide-react'
 import { clsx } from 'clsx'
-import AdtenderLogo from '../AdtenderLogo'
 import { clearUser, getRoleLabel, getRoleColor } from '../../lib/auth'
 import type { User, Role } from '../../types'
 

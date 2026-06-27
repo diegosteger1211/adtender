@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
-import AdtenderLogo from '../components/AdtenderLogo'
 import { storeUser } from '../lib/auth'
 import { api, storeToken } from '../lib/api'
 import type { Role } from '../types'
