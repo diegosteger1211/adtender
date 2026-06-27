@@ -22,6 +22,7 @@ import ScenarioGeneratorPage from './pages/apps/ScenarioGeneratorPage'
 import PreQualPage from './pages/apps/PreQualPage'
 import TemplateStorePage from './pages/apps/TemplateStorePage'
 import RankingPage from './pages/RankingPage'
+import VergleichPage from './pages/VergleichPage'
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/projekte/:id/szenarien" element={<SzenarienPage />} />
           <Route path="/projekte/:id/einstellungen" element={<EinstellungenPage />} />
           <Route path="/projekte/:id/ranking" element={<RankingPage />} />
+          <Route path="/projekte/:id/vergleich" element={<VergleichPage />} />
           <Route path="/checkliste" element={<PlaceholderPage title="Checkliste" description="Projektspezifische Checklisten — Import per Excel." badge="Sprint 3" />} />
           <Route path="/aufgaben" element={<PlaceholderPage title="Aufgabenliste" description="Alle Aufgaben des Projekts im Überblick." badge="Sprint 3" />} />
           <Route path="/anforderungen" element={<PlaceholderPage title="Anforderungen" description="Anforderungskatalog erfassen, importieren und verwalten." badge="Sprint 3" />} />

@@ -143,7 +143,7 @@ export default function RankingPage() {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigate(`/apps/fit-gap`)}
+                onClick={() => navigate(`/projekte/${projectId}/vergleich`)}
                 className="flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
               >
                 <GitCompare size={15} />
