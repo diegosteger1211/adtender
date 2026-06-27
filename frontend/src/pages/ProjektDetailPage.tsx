@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Building2, Plus, Loader2, X, Mail, CheckCircle,
-  Clock, Send, FileText, AlertCircle, ChevronRight
+  Clock, Send, FileText, AlertCircle, ChevronRight, Settings
 } from 'lucide-react'
 import { api } from '../lib/api'
 import { getStoredUser } from '../lib/auth'
@@ -206,6 +206,12 @@ export default function ProjektDetailPage() {
             className="flex items-center gap-2 bg-[#141720] border border-[#1E2433] hover:border-brand-500/40 text-gray-400 hover:text-brand-400 px-4 py-2 rounded-lg text-sm transition-all"
           >
             <Send size={14} /> Szenarien
+          </button>
+          <button
+            onClick={() => navigate(`/projekte/${id}/einstellungen`)}
+            className="flex items-center gap-2 bg-[#141720] border border-[#1E2433] hover:border-brand-500/40 text-gray-400 hover:text-brand-400 px-4 py-2 rounded-lg text-sm transition-all ml-auto"
+          >
+            <Settings size={14} /> Einstellungen
           </button>
         </div>
       )}
