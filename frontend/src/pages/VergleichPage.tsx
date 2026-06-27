@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronDown, ChevronRight, AlertTriangle, Settings2, X, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronDown, ChevronRight, AlertTriangle, Settings2, X, Loader2, LayoutGrid, ScatterChart } from 'lucide-react'
 import { api } from '../lib/api'
 
 type CapScore = { score: number; koViolations: number; reqCount: number; costAmount: number }
@@ -358,12 +358,96 @@ function AnforderungenTab({ suppliers, caps, labelW, colW }: {
   )
 }
 
+const SUPPLIER_COLORS = [
+  '#6366f1','#f59e0b','#10b981','#ef4444','#3b82f6','#ec4899',
+  '#14b8a6','#f97316','#8b5cf6','#84cc16','#06b6d4','#e11d48',
+  '#a16207','#15803d','#1d4ed8','#9333ea','#c2410c','#0891b2',
+]
+
+// ─── Kosten Chart ─────────────────────────────────────────────────────────────
+function KostenChart({ suppliers, caps, settings }: {
+  suppliers: SupplierData[]; caps: Capability[]; settings: KostenSettings
+}) {
+  const categories = [
+    { label: 'Gesamte Betriebskosten', get: (s: SupplierData) => calcBetrieb(s, settings) ?? 0 },
+    { label: 'Gesamte Implementierungskosten', get: (s: SupplierData) => calcImpl(s) ?? 0 },
+    { label: 'Gesamte Anpassungskosten', get: (s: SupplierData) => calcAnpassung(s, settings, caps) ?? 0 },
+  ]
+
+  const allValues = suppliers.flatMap(s => categories.map(c => c.get(s)))
+  const maxVal = Math.max(...allValues, 1)
+
+  const W = 700, H = 320
+  const PAD = { top: 20, right: 20, bottom: 50, left: 60 }
+  const chartW = W - PAD.left - PAD.right
+  const chartH = H - PAD.top - PAD.bottom
+
+  const catXs = categories.map((_, i) => PAD.left + (i + 0.5) * (chartW / categories.length))
+
+  const yTicks = [0, 1, 2, 3, 4].map(t => ({ label: t, y: PAD.top + chartH - (t / 4) * chartH }))
+
+  return (
+    <div className="p-8">
+      <div className="bg-[#141720] border border-[#1E2433] rounded-xl p-6">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: 340 }}>
+          {/* Y grid lines */}
+          {yTicks.map(t => (
+            <g key={t.label}>
+              <line x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y}
+                stroke="#1E2433" strokeWidth="1" strokeDasharray="4,4" />
+              <text x={PAD.left - 8} y={t.y + 4} textAnchor="end" fill="#6b7280" fontSize="11">
+                {maxVal > 0 ? Math.round((t.label / 4) * maxVal).toLocaleString('de-DE') : t.label}
+              </text>
+            </g>
+          ))}
+
+          {/* X axis labels */}
+          {categories.map((cat, i) => (
+            <text key={i} x={catXs[i]} y={H - PAD.bottom + 20} textAnchor="middle" fill="#6b7280" fontSize="11">
+              {cat.label}
+            </text>
+          ))}
+
+          {/* Dots per supplier */}
+          {suppliers.map((s, si) => {
+            const color = SUPPLIER_COLORS[si % SUPPLIER_COLORS.length]
+            return categories.map((cat, ci) => {
+              const val = cat.get(s)
+              const cx = catXs[ci]
+              const cy = PAD.top + chartH - (maxVal > 0 ? (val / maxVal) * chartH : 0)
+              return (
+                <circle key={`${si}-${ci}`} cx={cx} cy={cy} r={5}
+                  fill={color} opacity={0.85}>
+                  <title>{s.companyName}: {fmt(val)}</title>
+                </circle>
+              )
+            })
+          })}
+        </svg>
+
+        {/* Legend */}
+        <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4 justify-center">
+          {suppliers.map((s, i) => (
+            <div key={s.psId} className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: SUPPLIER_COLORS[i % SUPPLIER_COLORS.length] }} />
+              <span className="text-xs text-gray-400">{s.companyName}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Kosten Tab ──────────────────────────────────────────────────────────────
 function KostenTab({ suppliers, caps, settings, openSections, toggleSection, labelW, colW, onOpenSettings }: {
   suppliers: SupplierData[]; caps: Capability[]; settings: KostenSettings
   openSections: Record<string, boolean>; toggleSection: (k: string) => void
   labelW: number; colW: number; onOpenSettings: (p: 'betrieb' | 'anpassung') => void
 }) {
+  const [chartMode, setChartMode] = useState(false)
+
   // Total per supplier
   const totals = suppliers.map(s => {
     const b = calcBetrieb(s, settings) ?? 0
@@ -398,8 +482,42 @@ function KostenTab({ suppliers, caps, settings, openSections, toggleSection, lab
     return <span className="text-sm text-gray-300">{fmt(value ?? 0)}</span>
   }
 
+  if (chartMode) {
+    return (
+      <div>
+        <div className="flex justify-end px-6 py-2 border-b border-[#1E2433]">
+          <div className="flex gap-1">
+            <button onClick={() => setChartMode(false)}
+              className="p-1.5 rounded text-gray-500 hover:text-gray-300 transition-colors">
+              <LayoutGrid size={15} />
+            </button>
+            <button onClick={() => setChartMode(true)}
+              className="p-1.5 rounded bg-brand-500/10 text-brand-400 transition-colors">
+              <ScatterChart size={15} />
+            </button>
+          </div>
+        </div>
+        <KostenChart suppliers={suppliers} caps={caps} settings={settings} />
+      </div>
+    )
+  }
+
   return (
     <div>
+      {/* View toggle */}
+      <div className="flex justify-end px-6 py-2 border-b border-[#1E2433]">
+        <div className="flex gap-1">
+          <button onClick={() => setChartMode(false)}
+            className="p-1.5 rounded bg-brand-500/10 text-brand-400 transition-colors">
+            <LayoutGrid size={15} />
+          </button>
+          <button onClick={() => setChartMode(true)}
+            className="p-1.5 rounded text-gray-500 hover:text-gray-300 transition-colors">
+            <ScatterChart size={15} />
+          </button>
+        </div>
+      </div>
+
       {/* Total row */}
       <div className="flex border-b border-[#1E2433] bg-[#141720]">
         <div className="px-4 py-3 text-sm font-medium text-gray-300" style={{ width: labelW, flexShrink: 0 }} />
