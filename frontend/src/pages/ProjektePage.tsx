@@ -1,29 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, FolderOpen, ChevronRight, Users, Calendar, Loader2, X } from 'lucide-react'
+import { Plus, FolderOpen, SlidersHorizontal, Search, Loader2, X, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { api } from '../lib/api'
 import { getStoredUser } from '../lib/auth'
 import type { Project } from '../types'
-
-const PHASE_LABELS: Record<string, string> = {
-  erstellung: 'Erstellung',
-  ausschreibung: 'Ausschreibung',
-  bewertung: 'Bewertung',
-  entscheidung: 'Entscheidung',
-}
-
-const PHASE_COLORS: Record<string, string> = {
-  erstellung: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  ausschreibung: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
-  bewertung: 'bg-purple-500/10 text-purple-400 border border-purple-500/20',
-  entscheidung: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-}
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Entwurf',
   active: 'Aktiv',
   completed: 'Abgeschlossen',
   cancelled: 'Abgebrochen',
+}
+
+const PHASE_LABELS: Record<string, string> = {
+  erstellung: 'Erstellung',
+  ausschreibung: 'Ausschreibung',
+  bewertung: 'Bewertung',
+  entscheidung: 'Entscheidung',
 }
 
 const CATEGORIES = [
@@ -36,6 +29,8 @@ const CATEGORIES = [
   'E-Commerce',
   'Cloud-Infrastruktur',
   'Sicherheitslösung',
+  'MES-System',
+  'WMS-System',
   'Sonstige',
 ]
 
@@ -53,6 +48,21 @@ type NewProjectForm = {
   phase_end_entscheidung: string
 }
 
+const EMPTY_FORM: NewProjectForm = {
+  title: '', category: '', description: '',
+  phase_start_erstellung: '', phase_end_erstellung: '',
+  phase_start_ausschreibung: '', phase_end_ausschreibung: '',
+  phase_start_bewertung: '', phase_end_bewertung: '',
+  phase_start_entscheidung: '', phase_end_entscheidung: '',
+}
+
+function StatusIcon({ status }: { status: string }) {
+  if (status === 'active') return <CheckCircle2 size={16} className="text-emerald-400" />
+  if (status === 'completed') return <CheckCircle2 size={16} className="text-blue-400" />
+  if (status === 'cancelled') return <XCircle size={16} className="text-red-400" />
+  return <Clock size={16} className="text-gray-500" />
+}
+
 export default function ProjektePage() {
   const navigate = useNavigate()
   const user = getStoredUser()
@@ -61,23 +71,13 @@ export default function ProjektePage() {
   const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState<NewProjectForm>({
-    title: '',
-    category: '',
-    description: '',
-    phase_start_erstellung: '',
-    phase_end_erstellung: '',
-    phase_start_ausschreibung: '',
-    phase_end_ausschreibung: '',
-    phase_start_bewertung: '',
-    phase_end_bewertung: '',
-    phase_start_entscheidung: '',
-    phase_end_entscheidung: '',
-  })
+  const [form, setForm] = useState<NewProjectForm>(EMPTY_FORM)
+  const [search, setSearch] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
+  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [filterPhase, setFilterPhase] = useState<string>('')
 
-  useEffect(() => {
-    loadProjects()
-  }, [])
+  useEffect(() => { loadProjects() }, [])
 
   async function loadProjects() {
     try {
@@ -97,7 +97,7 @@ export default function ProjektePage() {
     try {
       await api.post('/api/projects', form)
       setShowModal(false)
-      setForm({ title: '', category: '', description: '', phase_start_erstellung: '', phase_end_erstellung: '', phase_start_ausschreibung: '', phase_end_ausschreibung: '', phase_start_bewertung: '', phase_end_bewertung: '', phase_start_entscheidung: '', phase_end_entscheidung: '' })
+      setForm(EMPTY_FORM)
       await loadProjects()
     } catch {
       // keep modal open
@@ -106,14 +106,24 @@ export default function ProjektePage() {
     }
   }
 
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase()
+    return projects.filter(p => {
+      const matchSearch = !q || p.title.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)
+      const matchStatus = !filterStatus || p.status === filterStatus
+      const matchPhase = !filterPhase || p.phase === filterPhase
+      return matchSearch && matchStatus && matchPhase
+    })
+  }, [projects, search, filterStatus, filterPhase])
+
   const canCreate = user?.role === 'admin' || user?.role === 'berater'
 
   return (
     <div className="p-8 max-w-6xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Projekte</h1>
+          <h1 className="text-2xl font-bold text-white">Auswahlprojekte</h1>
           <p className="text-gray-400 mt-1 text-sm">Alle Ausschreibungsprojekte im Überblick</p>
         </div>
         {canCreate && (
@@ -126,6 +136,60 @@ export default function ProjektePage() {
           </button>
         )}
       </div>
+
+      {/* Search + Filter bar */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="relative flex-1 max-w-md">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Suche nach Auswahlprojekten"
+            className="w-full bg-[#141720] border border-[#1E2433] text-gray-300 placeholder-gray-600 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        <button
+          onClick={() => setShowFilters(f => !f)}
+          className={`flex items-center gap-2 border rounded-lg px-3 py-2 text-sm transition-colors ${showFilters || filterStatus || filterPhase ? 'border-brand-500 text-brand-400 bg-brand-500/10' : 'border-[#1E2433] text-gray-400 hover:text-gray-300 bg-[#141720]'}`}
+        >
+          <SlidersHorizontal size={15} />
+          {(filterStatus || filterPhase) && <span className="w-1.5 h-1.5 bg-brand-400 rounded-full" />}
+        </button>
+      </div>
+
+      {/* Filter panel */}
+      {showFilters && (
+        <div className="flex items-center gap-3 mb-4 p-3 bg-[#141720] border border-[#1E2433] rounded-lg">
+          <span className="text-xs text-gray-500 font-medium">Filter:</span>
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="bg-[#0F1117] border border-[#2A3040] text-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-brand-500"
+          >
+            <option value="">Alle Status</option>
+            {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          <select
+            value={filterPhase}
+            onChange={e => setFilterPhase(e.target.value)}
+            className="bg-[#0F1117] border border-[#2A3040] text-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-brand-500"
+          >
+            <option value="">Alle Phasen</option>
+            {Object.entries(PHASE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          {(filterStatus || filterPhase) && (
+            <button onClick={() => { setFilterStatus(''); setFilterPhase('') }} className="text-xs text-gray-500 hover:text-gray-300 ml-1">
+              Zurücksetzen
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Content */}
       {loading ? (
@@ -150,55 +214,73 @@ export default function ProjektePage() {
           )}
         </div>
       ) : (
-        <div className="grid gap-4">
-          {projects.map(p => (
-            <div
-              key={p.id}
-              onClick={() => navigate(`/projekte/${p.id}`)}
-              className="bg-[#141720] border border-[#1E2433] hover:border-[#2A3347] rounded-xl p-5 cursor-pointer transition-all group"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-white font-semibold text-base truncate group-hover:text-brand-400 transition-colors">
-                      {p.title}
-                    </h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${PHASE_COLORS[p.phase]}`}>
-                      {PHASE_LABELS[p.phase]}
-                    </span>
-                  </div>
-                  <p className="text-gray-500 text-xs mb-3">{p.category}</p>
+        <div className="bg-[#141720] border border-[#1E2433] rounded-xl overflow-hidden">
+          {/* Table header */}
+          <div className="grid grid-cols-[140px_1fr_200px_80px_110px] gap-4 px-5 py-3 border-b border-[#1E2433] text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <span>Erstellt am</span>
+            <span>Titel</span>
+            <span>Tags</span>
+            <span>Status</span>
+            <span />
+          </div>
+
+          {/* Rows */}
+          {filtered.length === 0 ? (
+            <div className="text-center py-12 text-gray-500 text-sm">Keine Projekte gefunden.</div>
+          ) : (
+            filtered.map((p, i) => (
+              <div
+                key={p.id}
+                className={`grid grid-cols-[140px_1fr_200px_80px_110px] gap-4 px-5 py-4 items-center hover:bg-[#1a2035] transition-colors ${i > 0 ? 'border-t border-[#1E2433]' : ''}`}
+              >
+                {/* Date */}
+                <span className="text-gray-400 text-sm">
+                  {new Date(p.created_at).toLocaleDateString('de-DE')}
+                </span>
+
+                {/* Title + description */}
+                <div className="min-w-0">
+                  <p className="text-white font-medium text-sm leading-tight truncate">{p.title}</p>
                   {p.description && (
-                    <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">{p.description}</p>
+                    <p className="text-gray-500 text-xs mt-0.5 truncate">{p.description}</p>
                   )}
-                  <div className="flex items-center gap-5 mt-3">
-                    <span className="text-gray-500 text-xs flex items-center gap-1.5">
-                      <Users size={12} />
-                      {p.supplier_count ?? 0} Anbieter
-                    </span>
-                    <span className="text-gray-500 text-xs flex items-center gap-1.5">
-                      <Calendar size={12} />
-                      {new Date(p.created_at).toLocaleDateString('de-DE')}
-                    </span>
-                    {p.created_by_name && (
-                      <span className="text-gray-500 text-xs">von {p.created_by_name}</span>
-                    )}
-                  </div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
+
+                {/* Tags: category + phase */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {p.category && (
+                    <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 text-xs px-2 py-0.5 rounded-full">
+                      {p.category}
+                    </span>
+                  )}
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    p.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                    p.status === 'draft' ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20' :
-                    p.status === 'completed' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                    'bg-red-500/10 text-red-400 border border-red-500/20'
+                    p.phase === 'erstellung' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                    p.phase === 'ausschreibung' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
+                    p.phase === 'bewertung' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
+                    'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                   }`}>
-                    {STATUS_LABELS[p.status]}
+                    {PHASE_LABELS[p.phase]}
                   </span>
-                  <ChevronRight size={16} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
+                </div>
+
+                {/* Status icon */}
+                <div className="flex items-center gap-1.5">
+                  <StatusIcon status={p.status} />
+                  <span className="text-xs text-gray-500 hidden xl:inline">{STATUS_LABELS[p.status]}</span>
+                </div>
+
+                {/* Action */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => navigate(`/projekte/${p.id}`)}
+                    className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition-colors"
+                  >
+                    Ansehen
+                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
 
@@ -215,7 +297,6 @@ export default function ProjektePage() {
             </div>
 
             <form onSubmit={createProject} className="p-6 space-y-5">
-              {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Projekttitel *</label>
                 <input
@@ -228,7 +309,6 @@ export default function ProjektePage() {
                 />
               </div>
 
-              {/* Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Kategorie *</label>
                 <select
@@ -242,7 +322,6 @@ export default function ProjektePage() {
                 </select>
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Beschreibung</label>
                 <textarea
@@ -254,7 +333,6 @@ export default function ProjektePage() {
                 />
               </div>
 
-              {/* Phase timeline */}
               <div>
                 <h3 className="text-sm font-medium text-gray-300 mb-3">Phasen-Zeitplan (optional)</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -285,7 +363,6 @@ export default function ProjektePage() {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
