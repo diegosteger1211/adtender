@@ -1,6 +1,6 @@
 // Typed API client
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.steger.workers.dev'
 
 function getToken(): string | null {
   return localStorage.getItem('adtender_token')

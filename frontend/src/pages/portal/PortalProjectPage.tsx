@@ -170,7 +170,7 @@ export default function PortalProjectPage() {
       fd.append('file', file)
       fd.append('doc_type', docType)
       // Use raw fetch for multipart (portalApi uses JSON)
-      const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+      const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.steger.workers.dev'
       const token = localStorage.getItem('adtender_portal_token')
       const res = await fetch(`${API_BASE}/api/portal/projects/${psId}/documents`, {
         method: 'POST',
@@ -186,7 +186,7 @@ export default function PortalProjectPage() {
 
   async function deleteDoc(docId: string) {
     if (!psId || !confirm('Dokument wirklich löschen?')) return
-    const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.steger.workers.dev'
     const token = localStorage.getItem('adtender_portal_token')
     await fetch(`${API_BASE}/api/portal/projects/${psId}/documents/${docId}`, {
       method: 'DELETE',
@@ -196,7 +196,7 @@ export default function PortalProjectPage() {
   }
 
   async function downloadDoc(docId: string) {
-    const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.steger.workers.dev'
     const token = localStorage.getItem('adtender_portal_token')
     const res = await fetch(`${API_BASE}/api/portal/documents/${docId}/download`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},

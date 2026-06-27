@@ -111,7 +111,7 @@ export default function ProjektDetailPage() {
 
   async function downloadDoc(docId: string, filename: string) {
     const token = localStorage.getItem('adtender_token')
-    const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.steger.workers.dev'
     const res = await fetch(`${API_BASE}/api/documents/${docId}/download`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })

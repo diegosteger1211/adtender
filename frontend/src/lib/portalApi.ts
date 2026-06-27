@@ -1,6 +1,6 @@
 // Separate API client for the supplier portal (uses portal JWT)
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.steger.workers.dev'
 
 function getPortalToken(): string | null {
   return localStorage.getItem('adtender_portal_token')
