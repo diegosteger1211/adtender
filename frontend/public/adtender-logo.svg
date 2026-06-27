@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 110" fill="none">
+  <!-- "adtender" text in brand blue -->
+  <text
+    x="8"
+    y="84"
+    font-family="'Arial Rounded MT Bold', 'Arial Black', 'Arial', sans-serif"
+    font-size="80"
+    font-weight="900"
+    fill="#2563EB"
+    letter-spacing="-1"
+  >adtender</text>
+  <!-- Gray closing bracket: top-right horizontal + vertical line + bottom-right horizontal -->
+  <polyline
+    points="398,15 418,15 418,95 398,95"
+    stroke="#9CA3AF"
+    stroke-width="6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+</svg>

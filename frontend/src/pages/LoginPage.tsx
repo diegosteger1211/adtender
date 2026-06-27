@@ -63,7 +63,7 @@ export default function LoginPage() {
         />
         {/* Logo */}
         <div className="relative z-10">
-          <img src="/adtender-logo.png" alt="adtender" className="h-24 w-auto object-contain" style={{ mixBlendMode: 'screen' }} />
+          <img src="/adtender-logo.svg" alt="adtender" className="h-24 w-auto object-contain" />
         </div>
 
         {/* Center content */}
