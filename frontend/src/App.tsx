@@ -3,12 +3,6 @@ import LoginPage from './pages/LoginPage'
 import AppShell from './components/layout/AppShell'
 import DashboardPage from './pages/DashboardPage'
 import PlaceholderPage from './components/ui/PlaceholderPage'
-import { getStoredUser } from './lib/auth'
-
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  const user = getStoredUser()
-  return user ? <>{children}</> : <Navigate to="/login" replace />
-}
 
 export default function App() {
   return (
