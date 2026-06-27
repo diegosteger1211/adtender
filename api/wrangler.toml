@@ -18,5 +18,9 @@ database_id = "fc99e5f6-d4fa-490c-8b5b-e8ae2ba58e86"
 binding = "KV"
 id = "8b7c7fd7b49e4123b01979ed6fc7a835"
 
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "adtender-documents"
+
 [env.staging]
 vars = { ENVIRONMENT = "staging", CORS_ORIGIN = "https://staging.adtender.adesso-consulting.de" }

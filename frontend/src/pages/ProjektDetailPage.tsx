@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Building2, Plus, Loader2, X, Mail, CheckCircle,
-  Clock, Send, FileText, AlertCircle, ChevronRight, Settings
+  Clock, Send, FileText, AlertCircle, ChevronRight, Settings, Download, FolderOpen
 } from 'lucide-react'
 import { api } from '../lib/api'
 import { getStoredUser } from '../lib/auth'
@@ -45,6 +45,9 @@ export default function ProjektDetailPage() {
   const [inviting, setInviting] = useState(false)
   const [sendingInvite, setSendingInvite] = useState<string | null>(null)
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
+  const [docsModal, setDocsModal] = useState<{ psId: string; companyName: string } | null>(null)
+  const [docs, setDocs] = useState<{ id: string; doc_type: string; filename: string; file_size: number | null; uploaded_at: string }[]>([])
+  const [loadingDocs, setLoadingDocs] = useState(false)
 
   useEffect(() => { load() }, [id])
 
@@ -95,6 +98,29 @@ export default function ProjektDetailPage() {
     } finally {
       setSendingInvite(null)
     }
+  }
+
+  async function openDocs(psId: string, companyName: string) {
+    setDocsModal({ psId, companyName })
+    setLoadingDocs(true)
+    try {
+      const res = await api.get<{ documents: typeof docs }>(`/api/projects/${id}/suppliers/${psId}/documents`)
+      setDocs(res.documents)
+    } finally { setLoadingDocs(false) }
+  }
+
+  async function downloadDoc(docId: string, filename: string) {
+    const token = localStorage.getItem('adtender_token')
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+    const res = await fetch(`${API_BASE}/api/documents/${docId}/download`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (!res.ok) return
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+    URL.revokeObjectURL(url)
   }
 
   const canEdit = user?.role === 'admin' || user?.role === 'berater'
@@ -352,6 +378,13 @@ export default function ProjektDetailPage() {
                         {cfg.icon}
                         {cfg.label}
                       </span>
+                      <button
+                        onClick={() => openDocs(s.id, s.company_name)}
+                        title="Dokumente anzeigen"
+                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-brand-400 bg-[#1E2433] hover:bg-brand-500/10 border border-[#2A3040] hover:border-brand-500/20 px-2.5 py-1 rounded-full transition-colors"
+                      >
+                        <FolderOpen size={12} /> Dokumente
+                      </button>
                       {canEdit && (s.status === 'pending' || s.status === 'invited') && (
                         inviteSuccess === s.id ? (
                           <span className="flex items-center gap-1 text-xs text-emerald-400">
@@ -375,6 +408,63 @@ export default function ProjektDetailPage() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Dokumente modal */}
+      {docsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDocsModal(null)} />
+          <div className="relative bg-[#141720] border border-[#1E2433] rounded-2xl w-full max-w-lg shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#1E2433]">
+              <div>
+                <h2 className="text-white font-semibold">Dokumente</h2>
+                <p className="text-gray-500 text-xs mt-0.5">{docsModal.companyName}</p>
+              </div>
+              <button onClick={() => setDocsModal(null)} className="text-gray-500 hover:text-gray-300"><X size={20} /></button>
+            </div>
+            <div className="p-6">
+              {loadingDocs ? (
+                <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-gray-500" size={20} /></div>
+              ) : docs.length === 0 ? (
+                <div className="text-center py-8">
+                  <FolderOpen size={32} className="text-gray-600 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Noch keine Dokumente hochgeladen.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(['presentation', 'offer', 'contract'] as const).map(type => {
+                    const typeDocs = docs.filter(d => d.doc_type === type)
+                    if (typeDocs.length === 0) return null
+                    const label = type === 'presentation' ? 'Präsentation' : type === 'offer' ? 'Angebot' : 'Vertrag'
+                    return (
+                      <div key={type}>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{label}</p>
+                        <div className="space-y-1.5">
+                          {typeDocs.map(doc => (
+                            <div key={doc.id} className="flex items-center gap-3 bg-[#0F1117] border border-[#1E2433] rounded-lg px-3 py-2.5">
+                              <FileText size={14} className="text-brand-400 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm truncate">{doc.filename}</p>
+                                <p className="text-gray-600 text-xs">
+                                  {doc.file_size ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB · ` : ''}
+                                  {new Date(doc.uploaded_at).toLocaleDateString('de-DE')}
+                                </p>
+                              </div>
+                              <button onClick={() => downloadDoc(doc.id, doc.filename)}
+                                className="text-gray-500 hover:text-brand-400 transition-colors p-1">
+                                <Download size={15} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

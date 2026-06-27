@@ -3,7 +3,7 @@ import { Hono } from 'hono'
 import { verifyPassword, hashPassword, signJwt, verifyJwt } from '../auth'
 import type { JwtPayload } from '../auth'
 
-type Bindings = { DB: D1Database; KV: KVNamespace; JWT_SECRET: string; APP_URL: string }
+type Bindings = { DB: D1Database; KV: KVNamespace; R2: R2Bucket; JWT_SECRET: string; APP_URL: string }
 type Variables = { portalUser: JwtPayload; projectSupplierId: string }
 
 const portal = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -299,6 +299,101 @@ portal.put('/projects/:psId/financial', portalAuth as never, async c => {
   ).run()
 
   return c.json({ success: true })
+})
+
+// ── GET /api/portal/projects/:psId/documents ──
+portal.get('/projects/:psId/documents', portalAuth as never, async c => {
+  const user = c.get('portalUser')
+  const psId = c.req.param('psId')
+
+  const ps = await c.env.DB.prepare(
+    'SELECT id FROM project_suppliers WHERE id = ? AND portal_user_id = ?'
+  ).bind(psId, user.sub).first()
+  if (!ps) return c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404)
+
+  const docs = await c.env.DB.prepare(
+    'SELECT * FROM supplier_documents WHERE project_supplier_id = ? ORDER BY doc_type, uploaded_at DESC'
+  ).bind(psId).all()
+
+  return c.json({ documents: docs.results })
+})
+
+// ── POST /api/portal/projects/:psId/documents — multipart upload ──
+portal.post('/projects/:psId/documents', portalAuth as never, async c => {
+  const user = c.get('portalUser')
+  const psId = c.req.param('psId')
+
+  const ps = await c.env.DB.prepare(
+    'SELECT id FROM project_suppliers WHERE id = ? AND portal_user_id = ?'
+  ).bind(psId, user.sub).first()
+  if (!ps) return c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404)
+
+  const formData = await c.req.formData()
+  const file = formData.get('file') as File | null
+  const docType = formData.get('doc_type') as string | null
+
+  if (!file || !docType) return c.json({ error: 'file and doc_type required' }, 400)
+  if (!['presentation', 'offer', 'contract'].includes(docType)) return c.json({ error: 'Invalid doc_type' }, 400)
+  if (file.size > 50 * 1024 * 1024) return c.json({ error: 'Datei zu groß (max 50 MB)' }, 400)
+
+  const id = crypto.randomUUID()
+  const ext = file.name.split('.').pop() ?? 'bin'
+  const r2Key = `${psId}/${docType}/${id}.${ext}`
+
+  await c.env.R2.put(r2Key, file.stream(), {
+    httpMetadata: { contentType: file.type || 'application/octet-stream' },
+    customMetadata: { originalName: file.name },
+  })
+
+  await c.env.DB.prepare(
+    `INSERT INTO supplier_documents (id, project_supplier_id, doc_type, filename, file_size, content_type, r2_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).bind(id, psId, docType, file.name, file.size, file.type || 'application/octet-stream', r2Key).run()
+
+  return c.json({ success: true, id }, 201)
+})
+
+// ── DELETE /api/portal/projects/:psId/documents/:docId ──
+portal.delete('/projects/:psId/documents/:docId', portalAuth as never, async c => {
+  const user = c.get('portalUser')
+  const { psId, docId } = c.req.param()
+
+  const ps = await c.env.DB.prepare(
+    'SELECT id FROM project_suppliers WHERE id = ? AND portal_user_id = ?'
+  ).bind(psId, user.sub).first()
+  if (!ps) return c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404)
+
+  const doc = await c.env.DB.prepare(
+    'SELECT * FROM supplier_documents WHERE id = ? AND project_supplier_id = ?'
+  ).bind(docId, psId).first<{ r2_key: string }>()
+  if (!doc) return c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404)
+
+  await c.env.R2.delete(doc.r2_key)
+  await c.env.DB.prepare('DELETE FROM supplier_documents WHERE id = ?').bind(docId).run()
+
+  return c.json({ success: true })
+})
+
+// ── GET /api/portal/documents/:docId/download ──
+portal.get('/documents/:docId/download', portalAuth as never, async c => {
+  const user = c.get('portalUser')
+  const docId = c.req.param('docId')
+
+  const doc = await c.env.DB.prepare(
+    `SELECT sd.*, ps.portal_user_id FROM supplier_documents sd
+     JOIN project_suppliers ps ON ps.id = sd.project_supplier_id
+     WHERE sd.id = ?`
+  ).bind(docId).first<{ r2_key: string; filename: string; content_type: string; portal_user_id: string }>()
+
+  if (!doc || doc.portal_user_id !== user.sub) return c.json({ error: 'Not found' }, 404)
+
+  const obj = await c.env.R2.get(doc.r2_key)
+  if (!obj) return c.json({ error: 'File not found' }, 404)
+
+  const headers = new Headers()
+  headers.set('Content-Type', doc.content_type || 'application/octet-stream')
+  headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.filename)}"`)
+  return new Response(obj.body, { headers })
 })
 
 // ── GET /api/portal/projects/:psId/scenarios ──

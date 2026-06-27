@@ -11,10 +11,12 @@ import userRoutes from './routes/users'
 import { profileRoutes } from './routes/profile'
 import { scenarioRoutes } from './routes/scenarios'
 import { projectSettingsRoutes } from './routes/project-settings'
+import { documentRoutes } from './routes/documents'
 
 type Bindings = {
   DB: D1Database
   KV: KVNamespace
+  R2: R2Bucket
   ENVIRONMENT: string
   CORS_ORIGIN: string
   APP_URL: string
@@ -55,6 +57,7 @@ app.route('/api/users', userRoutes)
 app.route('/api/profile', profileRoutes)
 app.route('/api/projects', scenarioRoutes)
 app.route('/api/projects', projectSettingsRoutes)
+app.route('/api', documentRoutes)
 
 app.notFound(c => c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404))
 

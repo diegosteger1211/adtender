@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Loader2, ChevronDown, ChevronRight, AlertTriangle, CheckCircle, MessageSquare, Euro, LogOut } from 'lucide-react'
+import { Loader2, ChevronDown, ChevronRight, AlertTriangle, CheckCircle, MessageSquare, Euro, LogOut, Upload, FileText, Trash2, Download } from 'lucide-react'
 import { portalApi, clearPortalToken } from '../../lib/portalApi'
 
 type Capability = { id: string; name: string; type: string }
@@ -32,7 +32,12 @@ const FULFILLMENT_OPTIONS = [
   { value: 'nicht_vorhanden', label: 'Nicht vorhanden', color: 'text-red-400', desc: 'Funktion nicht verfügbar' },
 ]
 
-type Tab = 'finanzdaten' | 'anforderungen' | 'szenarien'
+type Tab = 'finanzdaten' | 'anforderungen' | 'szenarien' | 'dokumente'
+
+type SupplierDoc = {
+  id: string; doc_type: string; filename: string; file_size: number | null
+  content_type: string; uploaded_at: string
+}
 
 type Scenario = {
   id: string; title: string; description: string | null; sort_order: number
@@ -59,6 +64,8 @@ export default function PortalProjectPage() {
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null)
   const [scenarioComment, setScenarioComment] = useState('')
   const [savingComment, setSavingComment] = useState(false)
+  const [documents, setDocuments] = useState<SupplierDoc[]>([])
+  const [uploading, setUploading] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('finanzdaten')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
@@ -75,16 +82,18 @@ export default function PortalProjectPage() {
   async function load() {
     if (!psId) return
     try {
-      const [projRes, reqRes, finRes, scenRes] = await Promise.all([
+      const [projRes, reqRes, finRes, scenRes, docRes] = await Promise.all([
         portalApi.get<{ project: { title: string; category: string; phase: string; company_name: string } }>(`/api/portal/projects/${psId}`),
         portalApi.get<{ capabilities: Capability[]; requirements: Requirement[] }>(`/api/portal/projects/${psId}/requirements`),
         portalApi.get<{ financial: FinancialData | null }>(`/api/portal/projects/${psId}/financial`),
         portalApi.get<{ scenarios: Scenario[] }>(`/api/portal/projects/${psId}/scenarios`),
+        portalApi.get<{ documents: SupplierDoc[] }>(`/api/portal/projects/${psId}/documents`),
       ])
       setProject(projRes.project)
       setCapabilities(reqRes.capabilities)
       setRequirements(reqRes.requirements)
       setScenarios(scenRes.scenarios)
+      setDocuments(docRes.documents)
       if (finRes.financial) setFinancial(finRes.financial)
       if (reqRes.capabilities.length > 0) setExpanded(new Set([reqRes.capabilities[0].id]))
     } catch {
@@ -153,6 +162,56 @@ export default function PortalProjectPage() {
     } finally { setSavingComment(false) }
   }
 
+  async function uploadDoc(docType: string, file: File) {
+    if (!psId) return
+    setUploading(docType)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('doc_type', docType)
+      // Use raw fetch for multipart (portalApi uses JSON)
+      const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+      const token = localStorage.getItem('adtender_portal_token')
+      const res = await fetch(`${API_BASE}/api/portal/projects/${psId}/documents`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      })
+      if (!res.ok) throw new Error('Upload fehlgeschlagen')
+      // Reload docs
+      const docsRes = await portalApi.get<{ documents: SupplierDoc[] }>(`/api/portal/projects/${psId}/documents`)
+      setDocuments(docsRes.documents)
+    } finally { setUploading(null) }
+  }
+
+  async function deleteDoc(docId: string) {
+    if (!psId || !confirm('Dokument wirklich löschen?')) return
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+    const token = localStorage.getItem('adtender_portal_token')
+    await fetch(`${API_BASE}/api/portal/projects/${psId}/documents/${docId}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    setDocuments(prev => prev.filter(d => d.id !== docId))
+  }
+
+  async function downloadDoc(docId: string) {
+    const API_BASE = import.meta.env.VITE_API_URL || 'https://adtender-api.adesso-consulting.workers.dev'
+    const token = localStorage.getItem('adtender_portal_token')
+    const res = await fetch(`${API_BASE}/api/portal/documents/${docId}/download`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (!res.ok) return
+    const blob = await res.blob()
+    const disposition = res.headers.get('Content-Disposition') ?? ''
+    const match = disposition.match(/filename="([^"]+)"/)
+    const filename = match ? decodeURIComponent(match[1]) : 'download'
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const needsCost = responseForm.fulfillment && !['standard', 'nicht_vorhanden', ''].includes(responseForm.fulfillment)
 
   const answered = requirements.filter(r => r.fulfillment).length
@@ -196,7 +255,7 @@ export default function PortalProjectPage() {
       <div className="max-w-5xl mx-auto p-6">
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-[#0F1117] border border-[#1E2433] rounded-xl p-1 w-fit">
-          {([['finanzdaten', <Euro size={14} />, 'Finanzdaten'], ['anforderungen', <CheckCircle size={14} />, `Anforderungen (${answered}/${total})`], ['szenarien', <MessageSquare size={14} />, `Szenarien (${scenarios.length})`]] as [Tab, JSX.Element, string][]).map(([t, icon, label]) => (
+          {([['finanzdaten', <Euro size={14} />, 'Finanzdaten'], ['anforderungen', <CheckCircle size={14} />, `Anforderungen (${answered}/${total})`], ['szenarien', <MessageSquare size={14} />, `Szenarien (${scenarios.length})`], ['dokumente', <FileText size={14} />, `Dokumente (${documents.length})`]] as [Tab, JSX.Element, string][]).map(([t, icon, label]) => (
             <button key={t} onClick={() => setTab(t as Tab)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? 'bg-[#1E2433] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
               {icon}{label}
@@ -391,6 +450,73 @@ export default function PortalProjectPage() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* ── Dokumente ── */}
+        {tab === 'dokumente' && (
+          <div className="space-y-6">
+            {(['presentation', 'offer', 'contract'] as const).map(docType => {
+              const labels: Record<string, { title: string; desc: string; accept: string }> = {
+                presentation: { title: 'Präsentation', desc: 'Unternehmens- und Produktvorstellung (PDF, PPTX)', accept: '.pdf,.ppt,.pptx' },
+                offer: { title: 'Angebot', desc: 'Ihr kommerzielles Angebot (PDF, DOCX)', accept: '.pdf,.doc,.docx,.xls,.xlsx' },
+                contract: { title: 'Vertrag', desc: 'Vertragsentwurf oder -unterlagen (PDF, DOCX)', accept: '.pdf,.doc,.docx' },
+              }
+              const cfg = labels[docType]
+              const typeDocs = documents.filter(d => d.doc_type === docType)
+              const isUploading = uploading === docType
+
+              return (
+                <div key={docType} className="bg-[#141720] border border-[#1E2433] rounded-2xl p-5">
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div>
+                      <h3 className="text-white font-semibold">{cfg.title}</h3>
+                      <p className="text-gray-500 text-xs mt-0.5">{cfg.desc}</p>
+                    </div>
+                    <label className={`flex items-center gap-2 cursor-pointer bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/20 text-brand-400 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                      {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                      {isUploading ? 'Lädt hoch...' : 'Hochladen'}
+                      <input
+                        type="file"
+                        accept={cfg.accept}
+                        className="hidden"
+                        onChange={e => { const f = e.target.files?.[0]; if (f) uploadDoc(docType, f); e.target.value = '' }}
+                      />
+                    </label>
+                  </div>
+
+                  {typeDocs.length === 0 ? (
+                    <div className="border-2 border-dashed border-[#2A3040] rounded-xl p-8 text-center">
+                      <FileText size={24} className="text-gray-700 mx-auto mb-2" />
+                      <p className="text-gray-600 text-sm">Noch keine {cfg.title} hochgeladen.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {typeDocs.map(doc => (
+                        <div key={doc.id} className="flex items-center gap-3 bg-[#0F1117] border border-[#1E2433] rounded-xl px-4 py-3">
+                          <FileText size={16} className="text-brand-400 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm truncate">{doc.filename}</p>
+                            <p className="text-gray-600 text-xs mt-0.5">
+                              {doc.file_size ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB · ` : ''}
+                              {new Date(doc.uploaded_at).toLocaleDateString('de-DE')}
+                            </p>
+                          </div>
+                          <button onClick={() => downloadDoc(doc.id)}
+                            className="text-gray-500 hover:text-brand-400 transition-colors p-1" title="Herunterladen">
+                            <Download size={15} />
+                          </button>
+                          <button onClick={() => deleteDoc(doc.id)}
+                            className="text-gray-500 hover:text-red-400 transition-colors p-1" title="Löschen">
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
