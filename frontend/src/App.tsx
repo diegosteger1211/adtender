@@ -4,6 +4,7 @@ import AppShell from './components/layout/AppShell'
 import DashboardPage from './pages/DashboardPage'
 import ProjektePage from './pages/ProjektePage'
 import ProjektDetailPage from './pages/ProjektDetailPage'
+import AnforderungenPage from './pages/AnforderungenPage'
 import AnbieterPage from './pages/AnbieterPage'
 import BenutzerPage from './pages/BenutzerPage'
 import PlaceholderPage from './components/ui/PlaceholderPage'
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/projekte" element={<ProjektePage />} />
           <Route path="/projekte/:id" element={<ProjektDetailPage />} />
+          <Route path="/projekte/:id/anforderungen" element={<AnforderungenPage />} />
           <Route path="/checkliste" element={<PlaceholderPage title="Checkliste" description="Projektspezifische Checklisten — Import per Excel." badge="Sprint 3" />} />
           <Route path="/aufgaben" element={<PlaceholderPage title="Aufgabenliste" description="Alle Aufgaben des Projekts im Überblick." badge="Sprint 3" />} />
           <Route path="/anforderungen" element={<PlaceholderPage title="Anforderungen" description="Anforderungskatalog erfassen, importieren und verwalten." badge="Sprint 3" />} />

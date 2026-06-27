@@ -37,6 +37,7 @@ export default function ProjektDetailPage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('uebersicht')
 
+
   // invite modal
   const [showInvite, setShowInvite] = useState(false)
   const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([])
@@ -171,6 +172,18 @@ export default function ProjektDetailPage() {
           })}
         </div>
       </div>
+
+      {/* Quick nav to Anforderungen */}
+      {canEdit && (
+        <div className="mb-4">
+          <button
+            onClick={() => navigate(`/projekte/${id}/anforderungen`)}
+            className="flex items-center gap-2 bg-[#141720] border border-[#1E2433] hover:border-brand-500/40 text-gray-400 hover:text-brand-400 px-4 py-2 rounded-lg text-sm transition-all"
+          >
+            <FileText size={14} /> Anforderungskatalog öffnen
+          </button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-[#0F1117] border border-[#1E2433] rounded-xl p-1 w-fit">
