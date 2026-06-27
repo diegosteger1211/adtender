@@ -14,6 +14,13 @@ import ProfilPage from './pages/ProfilPage'
 import SzenarienPage from './pages/SzenarienPage'
 import EinstellungenPage from './pages/EinstellungenPage'
 import PlaceholderPage from './components/ui/PlaceholderPage'
+import AppHubPage from './pages/apps/AppHubPage'
+import FitGapPage from './pages/apps/FitGapPage'
+import NotesPage from './pages/apps/NotesPage'
+import RequirementTemplatesPage from './pages/apps/RequirementTemplatesPage'
+import ScenarioGeneratorPage from './pages/apps/ScenarioGeneratorPage'
+import PreQualPage from './pages/apps/PreQualPage'
+import TemplateStorePage from './pages/apps/TemplateStorePage'
 
 export default function App() {
   return (
@@ -36,7 +43,13 @@ export default function App() {
           <Route path="/praesentationen" element={<PlaceholderPage title="Präsentationen" description="Präsentationsunterlagen ablegen und verwalten." badge="Sprint 4" />} />
           <Route path="/angebot" element={<PlaceholderPage title="Angebot" description="Angebotsunterlagen der Anbieter." badge="Sprint 4" />} />
           <Route path="/vertrag" element={<PlaceholderPage title="Vertrag" description="Vertragsunterlagen und Abschluss-Dokumentation." badge="Sprint 5" />} />
-          <Route path="/apps" element={<PlaceholderPage title="Apps" description="Integrierte Anwendungen und Erweiterungen." badge="Post-MVP" />} />
+          <Route path="/apps" element={<AppHubPage />} />
+          <Route path="/apps/fit-gap" element={<FitGapPage />} />
+          <Route path="/apps/notes" element={<NotesPage />} />
+          <Route path="/apps/req-templates" element={<RequirementTemplatesPage />} />
+          <Route path="/apps/scenario-gen" element={<ScenarioGeneratorPage />} />
+          <Route path="/apps/prequalification" element={<PreQualPage />} />
+          <Route path="/apps/template-store" element={<TemplateStorePage />} />
           <Route path="/ranking" element={<PlaceholderPage title="Ranking" description="Anbieter-Ranking nach Anforderungen, Kosten und Bewertung." badge="Sprint 4" />} />
           <Route path="/qa" element={<PlaceholderPage title="Q&A" description="Fragen und Antworten zwischen Anbieter und Kunde." badge="Sprint 3" />} />
           <Route path="/nachrichten" element={<PlaceholderPage title="Nachrichten" description="Projektrelevante Nachrichten und Ankündigungen." badge="Sprint 3" />} />
