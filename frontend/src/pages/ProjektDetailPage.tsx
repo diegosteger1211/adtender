@@ -192,14 +192,20 @@ export default function ProjektDetailPage() {
         </div>
       </div>
 
-      {/* Quick nav to Anforderungen */}
+      {/* Quick nav */}
       {canEdit && (
-        <div className="mb-4">
+        <div className="flex gap-2 mb-4">
           <button
             onClick={() => navigate(`/projekte/${id}/anforderungen`)}
             className="flex items-center gap-2 bg-[#141720] border border-[#1E2433] hover:border-brand-500/40 text-gray-400 hover:text-brand-400 px-4 py-2 rounded-lg text-sm transition-all"
           >
-            <FileText size={14} /> Anforderungskatalog öffnen
+            <FileText size={14} /> Anforderungskatalog
+          </button>
+          <button
+            onClick={() => navigate(`/projekte/${id}/szenarien`)}
+            className="flex items-center gap-2 bg-[#141720] border border-[#1E2433] hover:border-brand-500/40 text-gray-400 hover:text-brand-400 px-4 py-2 rounded-lg text-sm transition-all"
+          >
+            <Send size={14} /> Szenarien
           </button>
         </div>
       )}

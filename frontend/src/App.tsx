@@ -11,6 +11,7 @@ import PortalProjectPage from './pages/portal/PortalProjectPage'
 import AnbieterPage from './pages/AnbieterPage'
 import BenutzerPage from './pages/BenutzerPage'
 import ProfilPage from './pages/ProfilPage'
+import SzenarienPage from './pages/SzenarienPage'
 import PlaceholderPage from './components/ui/PlaceholderPage'
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/projekte" element={<ProjektePage />} />
           <Route path="/projekte/:id" element={<ProjektDetailPage />} />
           <Route path="/projekte/:id/anforderungen" element={<AnforderungenPage />} />
+          <Route path="/projekte/:id/szenarien" element={<SzenarienPage />} />
           <Route path="/checkliste" element={<PlaceholderPage title="Checkliste" description="Projektspezifische Checklisten — Import per Excel." badge="Sprint 3" />} />
           <Route path="/aufgaben" element={<PlaceholderPage title="Aufgabenliste" description="Alle Aufgaben des Projekts im Überblick." badge="Sprint 3" />} />
           <Route path="/anforderungen" element={<PlaceholderPage title="Anforderungen" description="Anforderungskatalog erfassen, importieren und verwalten." badge="Sprint 3" />} />

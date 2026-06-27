@@ -32,7 +32,12 @@ const FULFILLMENT_OPTIONS = [
   { value: 'nicht_vorhanden', label: 'Nicht vorhanden', color: 'text-red-400', desc: 'Funktion nicht verfügbar' },
 ]
 
-type Tab = 'finanzdaten' | 'anforderungen'
+type Tab = 'finanzdaten' | 'anforderungen' | 'szenarien'
+
+type Scenario = {
+  id: string; title: string; description: string | null; sort_order: number
+  my_comment: string | null; comment_updated_at: string | null
+}
 
 const EMPTY_FIN: FinancialData = {
   currency: 'EUR',
@@ -50,6 +55,10 @@ export default function PortalProjectPage() {
   const [capabilities, setCapabilities] = useState<Capability[]>([])
   const [requirements, setRequirements] = useState<Requirement[]>([])
   const [financial, setFinancial] = useState<FinancialData>(EMPTY_FIN)
+  const [scenarios, setScenarios] = useState<Scenario[]>([])
+  const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null)
+  const [scenarioComment, setScenarioComment] = useState('')
+  const [savingComment, setSavingComment] = useState(false)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('finanzdaten')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
@@ -66,14 +75,16 @@ export default function PortalProjectPage() {
   async function load() {
     if (!psId) return
     try {
-      const [projRes, reqRes, finRes] = await Promise.all([
+      const [projRes, reqRes, finRes, scenRes] = await Promise.all([
         portalApi.get<{ project: { title: string; category: string; phase: string; company_name: string } }>(`/api/portal/projects/${psId}`),
         portalApi.get<{ capabilities: Capability[]; requirements: Requirement[] }>(`/api/portal/projects/${psId}/requirements`),
         portalApi.get<{ financial: FinancialData | null }>(`/api/portal/projects/${psId}/financial`),
+        portalApi.get<{ scenarios: Scenario[] }>(`/api/portal/projects/${psId}/scenarios`),
       ])
       setProject(projRes.project)
       setCapabilities(reqRes.capabilities)
       setRequirements(reqRes.requirements)
+      setScenarios(scenRes.scenarios)
       if (finRes.financial) setFinancial(finRes.financial)
       if (reqRes.capabilities.length > 0) setExpanded(new Set([reqRes.capabilities[0].id]))
     } catch {
@@ -127,6 +138,21 @@ export default function PortalProjectPage() {
     } finally { setSavingResponse(false) }
   }
 
+  function openScenario(s: Scenario) {
+    setSelectedScenario(s)
+    setScenarioComment(s.my_comment ?? '')
+  }
+
+  async function saveScenarioComment(s: Scenario) {
+    if (!psId) return
+    setSavingComment(true)
+    try {
+      await portalApi.put(`/api/portal/projects/${psId}/scenarios/${s.id}/comment`, { comment: scenarioComment })
+      setScenarios(prev => prev.map(sc => sc.id === s.id ? { ...sc, my_comment: scenarioComment } : sc))
+      setSelectedScenario(prev => prev ? { ...prev, my_comment: scenarioComment } : null)
+    } finally { setSavingComment(false) }
+  }
+
   const needsCost = responseForm.fulfillment && !['standard', 'nicht_vorhanden', ''].includes(responseForm.fulfillment)
 
   const answered = requirements.filter(r => r.fulfillment).length
@@ -170,7 +196,7 @@ export default function PortalProjectPage() {
       <div className="max-w-5xl mx-auto p-6">
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-[#0F1117] border border-[#1E2433] rounded-xl p-1 w-fit">
-          {([['finanzdaten', <Euro size={14} />, 'Finanzdaten'], ['anforderungen', <CheckCircle size={14} />, `Anforderungen (${answered}/${total})`]] as const).map(([t, icon, label]) => (
+          {([['finanzdaten', <Euro size={14} />, 'Finanzdaten'], ['anforderungen', <CheckCircle size={14} />, `Anforderungen (${answered}/${total})`], ['szenarien', <MessageSquare size={14} />, `Szenarien (${scenarios.length})`]] as [Tab, JSX.Element, string][]).map(([t, icon, label]) => (
             <button key={t} onClick={() => setTab(t as Tab)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? 'bg-[#1E2433] text-white' : 'text-gray-500 hover:text-gray-300'}`}>
               {icon}{label}
@@ -289,6 +315,82 @@ export default function PortalProjectPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* ── Szenarien ── */}
+        {tab === 'szenarien' && (
+          <div className="flex gap-6">
+            {scenarios.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center py-20 bg-[#141720] border border-[#1E2433] rounded-xl">
+                <p className="text-gray-500 text-sm">Noch keine Szenarien definiert.</p>
+              </div>
+            ) : (
+              <>
+                {/* List */}
+                <div className="w-72 flex-shrink-0 space-y-2">
+                  {scenarios.map((s, i) => (
+                    <button key={s.id} onClick={() => openScenario(s)}
+                      className={`w-full text-left bg-[#141720] border rounded-xl p-4 transition-all ${selectedScenario?.id === s.id ? 'border-brand-500/40 bg-brand-500/5' : 'border-[#1E2433] hover:border-[#2A3040]'}`}>
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-bold text-gray-600 w-5 flex-shrink-0 mt-0.5">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{s.title}</p>
+                          {s.my_comment && (
+                            <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                              <MessageSquare size={11} /> Kommentiert
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Detail */}
+                <div className="flex-1">
+                  {selectedScenario ? (
+                    <div className="bg-[#141720] border border-[#1E2433] rounded-2xl p-6 space-y-5">
+                      <div>
+                        <span className="text-xs text-gray-600 uppercase tracking-wider">
+                          Szenario {scenarios.findIndex(s => s.id === selectedScenario.id) + 1}
+                        </span>
+                        <h2 className="text-lg font-bold text-white mt-1">{selectedScenario.title}</h2>
+                      </div>
+
+                      {selectedScenario.description ? (
+                        <div className="bg-[#0F1117] border border-[#1E2433] rounded-xl p-4">
+                          <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{selectedScenario.description}</p>
+                        </div>
+                      ) : (
+                        <p className="text-gray-600 text-sm italic">Keine Beschreibung vorhanden.</p>
+                      )}
+
+                      <div className="border-t border-[#1E2433] pt-5">
+                        <label className="block text-xs font-medium text-gray-400 mb-2">Ihr Kommentar</label>
+                        <textarea
+                          rows={4}
+                          value={scenarioComment}
+                          onChange={e => setScenarioComment(e.target.value)}
+                          placeholder="Kommentar zu diesem Szenario eingeben ..."
+                          className="w-full bg-[#0F1117] border border-[#2A3040] text-white placeholder-gray-600 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-500 resize-none"
+                        />
+                        <button
+                          onClick={() => saveScenarioComment(selectedScenario)}
+                          disabled={savingComment}
+                          className="mt-3 flex items-center gap-2 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                          {savingComment ? <Loader2 size={14} className="animate-spin" /> : 'Kommentar speichern'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-48 bg-[#141720] border border-[#1E2433] rounded-2xl">
+                      <p className="text-gray-600 text-sm">Szenario auswählen</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

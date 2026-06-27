@@ -301,4 +301,49 @@ portal.put('/projects/:psId/financial', portalAuth as never, async c => {
   return c.json({ success: true })
 })
 
+// ── GET /api/portal/projects/:psId/scenarios ──
+portal.get('/projects/:psId/scenarios', portalAuth as never, async c => {
+  const user = c.get('portalUser')
+  const psId = c.req.param('psId')
+
+  const ps = await c.env.DB.prepare(
+    'SELECT id, project_id FROM project_suppliers WHERE id = ? AND portal_user_id = ?'
+  ).bind(psId, user.sub).first<{ id: string; project_id: string }>()
+  if (!ps) return c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404)
+
+  const scenarios = await c.env.DB.prepare(
+    `SELECT s.id, s.title, s.description, s.sort_order,
+            sc.comment as my_comment, sc.updated_at as comment_updated_at
+     FROM scenarios s
+     LEFT JOIN scenario_comments sc ON sc.scenario_id = s.id AND sc.project_supplier_id = ?
+     WHERE s.project_id = ?
+     ORDER BY s.sort_order ASC, s.created_at ASC`
+  ).bind(psId, ps.project_id).all()
+
+  return c.json({ scenarios: scenarios.results })
+})
+
+// ── PUT /api/portal/projects/:psId/scenarios/:scenarioId/comment ──
+portal.put('/projects/:psId/scenarios/:scenarioId/comment', portalAuth as never, async c => {
+  const user = c.get('portalUser')
+  const { psId, scenarioId } = c.req.param()
+
+  const ps = await c.env.DB.prepare(
+    'SELECT id FROM project_suppliers WHERE id = ? AND portal_user_id = ?'
+  ).bind(psId, user.sub).first()
+  if (!ps) return c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404)
+
+  const { comment } = await c.req.json<{ comment: string }>()
+  const id = crypto.randomUUID()
+
+  await c.env.DB.prepare(
+    `INSERT INTO scenario_comments (id, scenario_id, project_supplier_id, comment)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(scenario_id, project_supplier_id) DO UPDATE SET
+       comment = excluded.comment, updated_at = datetime('now')`
+  ).bind(id, scenarioId, psId, comment ?? '').run()
+
+  return c.json({ success: true })
+})
+
 export default portal
