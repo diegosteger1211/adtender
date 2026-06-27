@@ -14,6 +14,7 @@ import ProfilPage from './pages/ProfilPage'
 import SzenarienPage from './pages/SzenarienPage'
 import EinstellungenPage from './pages/EinstellungenPage'
 import PlaceholderPage from './components/ui/PlaceholderPage'
+import ProjectSelectorPage from './components/ui/ProjectSelectorPage'
 import AppHubPage from './pages/apps/AppHubPage'
 import FitGapPage from './pages/apps/FitGapPage'
 import NotesPage from './pages/apps/NotesPage'
@@ -42,8 +43,8 @@ export default function App() {
           <Route path="/projekte/:id/vergleich" element={<VergleichPage />} />
           <Route path="/checkliste" element={<PlaceholderPage title="Checkliste" description="Projektspezifische Checklisten — Import per Excel." badge="Sprint 3" />} />
           <Route path="/aufgaben" element={<PlaceholderPage title="Aufgabenliste" description="Alle Aufgaben des Projekts im Überblick." badge="Sprint 3" />} />
-          <Route path="/anforderungen" element={<PlaceholderPage title="Anforderungen" description="Anforderungskatalog erfassen, importieren und verwalten." badge="Sprint 3" />} />
-          <Route path="/szenarien" element={<PlaceholderPage title="Szenarien" description="Use-Cases für die Demo-Präsentation definieren." badge="Sprint 3" />} />
+          <Route path="/anforderungen" element={<ProjectSelectorPage title="Anforderungen" description="Anforderungskatalog erfassen, importieren und verwalten." targetPath="anforderungen" />} />
+          <Route path="/szenarien" element={<ProjectSelectorPage title="Szenarien" description="Use-Cases für die Demo-Präsentation definieren." targetPath="szenarien" />} />
           <Route path="/praesentationen" element={<PlaceholderPage title="Präsentationen" description="Präsentationsunterlagen ablegen und verwalten." badge="Sprint 4" />} />
           <Route path="/angebot" element={<PlaceholderPage title="Angebot" description="Angebotsunterlagen der Anbieter." badge="Sprint 4" />} />
           <Route path="/vertrag" element={<PlaceholderPage title="Vertrag" description="Vertragsunterlagen und Abschluss-Dokumentation." badge="Sprint 5" />} />
@@ -54,7 +55,7 @@ export default function App() {
           <Route path="/apps/scenario-gen" element={<ScenarioGeneratorPage />} />
           <Route path="/apps/prequalification" element={<PreQualPage />} />
           <Route path="/apps/template-store" element={<TemplateStorePage />} />
-          <Route path="/ranking" element={<PlaceholderPage title="Ranking" description="Anbieter-Ranking nach Anforderungen, Kosten und Bewertung." badge="Sprint 4" />} />
+          <Route path="/ranking" element={<ProjectSelectorPage title="Ranking" description="Anbieter-Ranking nach Anforderungen, Kosten und Bewertung." targetPath="ranking" />} />
           <Route path="/qa" element={<PlaceholderPage title="Q&A" description="Fragen und Antworten zwischen Anbieter und Kunde." badge="Sprint 3" />} />
           <Route path="/nachrichten" element={<PlaceholderPage title="Nachrichten" description="Projektrelevante Nachrichten und Ankündigungen." badge="Sprint 3" />} />
           <Route path="/termine" element={<PlaceholderPage title="Termine" description="Wichtige Projekttermine und Deadlines." badge="Sprint 3" />} />
