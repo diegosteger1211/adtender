@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import authRoutes from './routes/auth'
 import projectRoutes from './routes/projects'
+import projectSupplierRoutes from './routes/project-suppliers'
 import supplierRoutes from './routes/suppliers'
 import userRoutes from './routes/users'
 
@@ -39,6 +40,7 @@ app.get('/api/health', async c => {
 
 app.route('/api/auth', authRoutes)
 app.route('/api/projects', projectRoutes)
+app.route('/api/projects', projectSupplierRoutes)
 app.route('/api/suppliers', supplierRoutes)
 app.route('/api/users', userRoutes)
 
