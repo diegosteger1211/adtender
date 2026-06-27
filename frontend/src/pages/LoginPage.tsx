@@ -2,38 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
 import { storeUser } from '../lib/auth'
-import type { Role, User } from '../types'
-
-const DEMO_USERS: Record<string, User> = {
-  'admin@adtender.de': {
-    id: '1',
-    email: 'admin@adtender.de',
-    name: 'Admin User',
-    role: 'admin',
-    tenantId: 'adesso',
-  },
-  'berater@adtender.de': {
-    id: '2',
-    email: 'berater@adtender.de',
-    name: 'Diego Steger',
-    role: 'berater',
-    tenantId: 'adesso',
-  },
-  'kunde@adtender.de': {
-    id: '3',
-    email: 'kunde@adtender.de',
-    name: 'Kunde Mustermann',
-    role: 'kunde',
-    tenantId: 'adesso',
-  },
-  'anbieter@adtender.de': {
-    id: '4',
-    email: 'anbieter@adtender.de',
-    name: 'Anbieter GmbH',
-    role: 'anbieter',
-    tenantId: 'adesso',
-  },
-}
+import { api, storeToken } from '../lib/api'
+import type { Role } from '../types'
 
 const ROLE_HINTS: { email: string; role: string; color: string }[] = [
   { email: 'admin@adtender.de', role: 'Administrator', color: 'text-purple-400' },
@@ -55,13 +25,15 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
 
-    await new Promise(r => setTimeout(r, 600))
-
-    const user = DEMO_USERS[email.toLowerCase()]
-    if (user && password === 'demo1234') {
-      storeUser(user)
+    try {
+      const res = await api.post<{ token: string; user: { id: string; email: string; name: string; role: Role; tenantId: string } }>(
+        '/api/auth/login',
+        { email: email.trim().toLowerCase(), password }
+      )
+      storeToken(res.token)
+      storeUser(res.user)
       navigate('/dashboard')
-    } else {
+    } catch (err) {
       setError('E-Mail oder Passwort ungültig.')
     }
     setLoading(false)

@@ -7,6 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 ENVIRONMENT = "production"
 CORS_ORIGIN = "https://adtender.adesso-consulting.de"
 APP_URL = "https://adtender.adesso-consulting.de"
+# JWT_SECRET is stored as a Worker Secret (wrangler secret put JWT_SECRET), not in plaintext here
 
 [[d1_databases]]
 binding = "DB"

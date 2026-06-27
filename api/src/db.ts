@@ -1,21 +1,26 @@
-export type Role = 'admin' | 'berater' | 'kunde' | 'anbieter'
+// D1 database helper — typed row access
 
-export type User = {
+export type TenantRow = {
   id: string
+  name: string
+  slug: string
+  logo_url: string | null
+  created_at: string
+}
+
+export type UserRow = {
+  id: string
+  tenant_id: string
   email: string
   name: string
-  role: Role
-  tenantId: string
-  is_active?: number
-  created_at?: string
+  role: 'admin' | 'berater' | 'kunde' | 'anbieter'
+  password_hash: string
+  is_active: number
+  created_at: string
+  updated_at: string
 }
 
-export type AuthState = {
-  user: User | null
-  isAuthenticated: boolean
-}
-
-export type Project = {
+export type ProjectRow = {
   id: string
   tenant_id: string
   title: string
@@ -32,13 +37,11 @@ export type Project = {
   phase_start_entscheidung: string | null
   phase_end_entscheidung: string | null
   created_by: string
-  created_by_name?: string
-  supplier_count?: number
   created_at: string
   updated_at: string
 }
 
-export type Supplier = {
+export type SupplierRow = {
   id: string
   tenant_id: string
   company_name: string
@@ -53,22 +56,20 @@ export type Supplier = {
   website: string | null
   logo_url: string | null
   is_active: number
-  project_count?: number
   created_at: string
   updated_at: string
 }
 
-export type ProjectSupplier = {
+export type ProjectSupplierRow = {
   id: string
   project_id: string
   supplier_id: string
-  company_name: string
-  contact_name: string
-  supplier_email: string
   contact_email: string | null
   invitation_token: string | null
   invitation_sent_at: string | null
   portal_opened_at: string | null
   submitted_at: string | null
   status: 'pending' | 'invited' | 'portal_opened' | 'submitted' | 'completed' | 'excluded'
+  is_active: number
+  created_at: string
 }

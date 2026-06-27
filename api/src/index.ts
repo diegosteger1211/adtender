@@ -1,5 +1,9 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import authRoutes from './routes/auth'
+import projectRoutes from './routes/projects'
+import supplierRoutes from './routes/suppliers'
+import userRoutes from './routes/users'
 
 type Bindings = {
   DB: D1Database
@@ -7,6 +11,7 @@ type Bindings = {
   ENVIRONMENT: string
   CORS_ORIGIN: string
   APP_URL: string
+  JWT_SECRET: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -21,35 +26,21 @@ app.use('*', async (c, next) => {
   return corsMiddleware(c, next)
 })
 
-app.get('/api/health', c => {
+app.get('/api/health', async c => {
+  // verify DB connectivity
+  const dbOk = await c.env.DB.prepare('SELECT 1 as ok').first<{ ok: number }>().then(() => true).catch(() => false)
   return c.json({
-    status: 'ok',
+    status: dbOk ? 'ok' : 'degraded',
     environment: c.env.ENVIRONMENT,
     timestamp: new Date().toISOString(),
+    db: dbOk ? 'connected' : 'error',
   })
 })
 
-app.post('/api/auth/login', async c => {
-  const body = await c.req.json<{ email: string; password: string }>()
-
-  // Placeholder — real auth with D1 in Sprint 2
-  const DEMO: Record<string, { name: string; role: string }> = {
-    'admin@adtender.de': { name: 'Admin User', role: 'admin' },
-    'berater@adtender.de': { name: 'Diego Steger', role: 'berater' },
-    'kunde@adtender.de': { name: 'Kunde Mustermann', role: 'kunde' },
-    'anbieter@adtender.de': { name: 'Anbieter GmbH', role: 'anbieter' },
-  }
-
-  const user = DEMO[body.email?.toLowerCase()]
-  if (!user || body.password !== 'demo1234') {
-    return c.json({ error: 'Invalid credentials', code: 'AUTH_FAILED', status: 401 }, 401)
-  }
-
-  return c.json({
-    user: { id: crypto.randomUUID(), email: body.email, ...user, tenantId: 'adesso' },
-    token: 'demo-token',
-  })
-})
+app.route('/api/auth', authRoutes)
+app.route('/api/projects', projectRoutes)
+app.route('/api/suppliers', supplierRoutes)
+app.route('/api/users', userRoutes)
 
 app.notFound(c => c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404))
 
