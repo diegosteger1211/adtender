@@ -64,7 +64,9 @@ export default function LoginPage() {
         />
         {/* Logo */}
         <div className="relative z-10">
-          <AdtenderLogo className="h-16" />
+          <div className="bg-white rounded-xl px-5 py-3 inline-block">
+            <AdtenderLogo className="h-12" />
+          </div>
         </div>
 
         {/* Center content */}
@@ -109,7 +111,9 @@ export default function LoginPage() {
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile logo */}
           <div className="lg:hidden mb-10">
-            <AdtenderLogo className="h-10" />
+            <div className="bg-white rounded-lg px-4 py-2 inline-block">
+            <AdtenderLogo className="h-8" />
+          </div>
           </div>
 
           <div className="mb-8">
