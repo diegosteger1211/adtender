@@ -118,18 +118,8 @@ export default function Sidebar({ user }: SidebarProps) {
   return (
     <aside className="w-60 flex-shrink-0 bg-[#0F1117] border-r border-[#1E2433] flex flex-col h-screen sticky top-0">
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-[#1E2433]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg viewBox="0 0 24 24" fill="none" className="w-4.5 h-4.5 text-white" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <div>
-            <span className="text-white font-semibold text-base tracking-tight">adtender</span>
-            <p className="text-[10px] text-gray-500 leading-none mt-0.5">by adesso SE</p>
-          </div>
-        </div>
+      <div className="px-5 py-4 border-b border-[#1E2433]">
+        <img src="/adtender-logo.png" alt="adtender" className="h-8 w-auto object-contain" />
       </div>
 
       {/* Navigation */}
