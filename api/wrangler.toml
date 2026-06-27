@@ -1,0 +1,21 @@
+name = "adtender-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+CORS_ORIGIN = "https://adtender.adesso-consulting.de"
+APP_URL = "https://adtender.adesso-consulting.de"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "adtender-production"
+database_id = "fc99e5f6-d4fa-490c-8b5b-e8ae2ba58e86"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "8b7c7fd7b49e4123b01979ed6fc7a835"
+
+[env.staging]
+vars = { ENVIRONMENT = "staging", CORS_ORIGIN = "https://staging.adtender.adesso-consulting.de" }
