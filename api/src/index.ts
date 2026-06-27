@@ -8,6 +8,7 @@ import inviteRoutes from './routes/invite'
 import portalRoutes from './routes/portal'
 import supplierRoutes from './routes/suppliers'
 import userRoutes from './routes/users'
+import { profileRoutes } from './routes/profile'
 
 type Bindings = {
   DB: D1Database
@@ -49,6 +50,7 @@ app.route('/api/projects', inviteRoutes)
 app.route('/api/portal', portalRoutes)
 app.route('/api/suppliers', supplierRoutes)
 app.route('/api/users', userRoutes)
+app.route('/api/profile', profileRoutes)
 
 app.notFound(c => c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404))
 

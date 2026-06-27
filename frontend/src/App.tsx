@@ -10,6 +10,7 @@ import PortalLoginPage from './pages/portal/PortalLoginPage'
 import PortalProjectPage from './pages/portal/PortalProjectPage'
 import AnbieterPage from './pages/AnbieterPage'
 import BenutzerPage from './pages/BenutzerPage'
+import ProfilPage from './pages/ProfilPage'
 import PlaceholderPage from './components/ui/PlaceholderPage'
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/system/einstellungen" element={<PlaceholderPage title="Einstellungen" description="Plattform-Konfiguration und Mandanten-Einstellungen." badge="Sprint 3" />} />
           <Route path="/system/benutzer" element={<BenutzerPage />} />
           <Route path="/system/anbieter" element={<AnbieterPage />} />
+          <Route path="/profil" element={<ProfilPage />} />
         </Route>
 
         {/* Supplier portal — standalone, no AppShell */}

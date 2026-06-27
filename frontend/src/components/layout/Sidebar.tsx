@@ -176,7 +176,10 @@ export default function Sidebar({ user }: SidebarProps) {
 
       {/* User profile */}
       <div className="px-3 py-4 border-t border-[#1E2433]">
-        <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
+        <button
+          onClick={() => navigate('/profil')}
+          className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
+        >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-semibold">
               {user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
@@ -188,14 +191,15 @@ export default function Sidebar({ user }: SidebarProps) {
               {getRoleLabel(user.role)}
             </span>
           </div>
-          <button
-            onClick={handleLogout}
-            title="Abmelden"
-            className="text-gray-600 hover:text-gray-300 transition-colors flex-shrink-0"
-          >
-            <LogOut size={15} />
-          </button>
-        </div>
+        </button>
+        <button
+          onClick={handleLogout}
+          title="Abmelden"
+          className="w-full flex items-center gap-2 px-2 py-2 mt-1 rounded-lg text-gray-600 hover:text-gray-300 hover:bg-white/5 text-xs transition-colors"
+        >
+          <LogOut size={13} />
+          Abmelden
+        </button>
       </div>
     </aside>
   )
