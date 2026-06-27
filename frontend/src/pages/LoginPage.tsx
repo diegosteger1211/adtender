@@ -63,7 +63,7 @@ export default function LoginPage() {
         />
         {/* Logo */}
         <div className="relative z-10">
-          <img src="/adtender-logo.png" alt="adtender" className="h-24 w-auto object-contain" />
+          <img src="/adtender-logo.svg" alt="adtender" className="h-24 w-auto object-contain" />
         </div>
 
         {/* Center content */}
@@ -108,7 +108,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile logo */}
           <div className="lg:hidden mb-10">
-            <img src="/adtender-logo.png" alt="adtender" className="h-9 w-auto object-contain" />
+            <img src="/adtender-logo.svg" alt="adtender" className="h-9 w-auto object-contain" />
           </div>
 
           <div className="mb-8">
