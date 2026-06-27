@@ -5,6 +5,9 @@ import DashboardPage from './pages/DashboardPage'
 import ProjektePage from './pages/ProjektePage'
 import ProjektDetailPage from './pages/ProjektDetailPage'
 import AnforderungenPage from './pages/AnforderungenPage'
+import PortalActivatePage from './pages/portal/PortalActivatePage'
+import PortalLoginPage from './pages/portal/PortalLoginPage'
+import PortalProjectPage from './pages/portal/PortalProjectPage'
 import AnbieterPage from './pages/AnbieterPage'
 import BenutzerPage from './pages/BenutzerPage'
 import PlaceholderPage from './components/ui/PlaceholderPage'
@@ -39,6 +42,11 @@ export default function App() {
           <Route path="/system/benutzer" element={<BenutzerPage />} />
           <Route path="/system/anbieter" element={<AnbieterPage />} />
         </Route>
+
+        {/* Supplier portal — standalone, no AppShell */}
+        <Route path="/portal/login" element={<PortalLoginPage />} />
+        <Route path="/portal/activate/:token" element={<PortalActivatePage />} />
+        <Route path="/portal/projekte/:psId" element={<PortalProjectPage />} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

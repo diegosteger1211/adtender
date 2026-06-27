@@ -4,6 +4,8 @@ import authRoutes from './routes/auth'
 import projectRoutes from './routes/projects'
 import projectSupplierRoutes from './routes/project-suppliers'
 import requirementRoutes from './routes/requirements'
+import inviteRoutes from './routes/invite'
+import portalRoutes from './routes/portal'
 import supplierRoutes from './routes/suppliers'
 import userRoutes from './routes/users'
 
@@ -43,6 +45,8 @@ app.route('/api/auth', authRoutes)
 app.route('/api/projects', projectRoutes)
 app.route('/api/projects', projectSupplierRoutes)
 app.route('/api/projects', requirementRoutes)
+app.route('/api/projects', inviteRoutes)
+app.route('/api/portal', portalRoutes)
 app.route('/api/suppliers', supplierRoutes)
 app.route('/api/users', userRoutes)
 

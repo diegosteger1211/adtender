@@ -43,6 +43,8 @@ export default function ProjektDetailPage() {
   const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([])
   const [selectedSupplier, setSelectedSupplier] = useState('')
   const [inviting, setInviting] = useState(false)
+  const [sendingInvite, setSendingInvite] = useState<string | null>(null)
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
 
   useEffect(() => { load() }, [id])
 
@@ -70,11 +72,28 @@ export default function ProjektDetailPage() {
     if (!selectedSupplier || !id) return
     setInviting(true)
     try {
-      await api.post(`/api/projects/${id}/suppliers`, { supplier_id: selectedSupplier })
+      const res = await api.post<{ success: boolean; id: string }>(
+        `/api/projects/${id}/suppliers`, { supplier_id: selectedSupplier }
+      )
+      // Send invitation email immediately after adding
+      await api.post(`/api/projects/${id}/invite/${res.id}`, {})
       setShowInvite(false)
       await load()
     } finally {
       setInviting(false)
+    }
+  }
+
+  async function sendInviteEmail(projectSupplierId: string) {
+    if (!id) return
+    setSendingInvite(projectSupplierId)
+    try {
+      await api.post(`/api/projects/${id}/invite/${projectSupplierId}`, {})
+      setInviteSuccess(projectSupplierId)
+      setTimeout(() => setInviteSuccess(null), 3000)
+      await load()
+    } finally {
+      setSendingInvite(null)
     }
   }
 
@@ -321,6 +340,23 @@ export default function ProjektDetailPage() {
                         {cfg.icon}
                         {cfg.label}
                       </span>
+                      {canEdit && (s.status === 'pending' || s.status === 'invited') && (
+                        inviteSuccess === s.id ? (
+                          <span className="flex items-center gap-1 text-xs text-emerald-400">
+                            <CheckCircle size={13} /> Gesendet
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => sendInviteEmail(s.id)}
+                            disabled={sendingInvite === s.id}
+                            title="Einladungsmail senden"
+                            className="flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/20 px-2.5 py-1 rounded-full transition-colors disabled:opacity-50"
+                          >
+                            {sendingInvite === s.id ? <Loader2 size={12} className="animate-spin" /> : <Mail size={12} />}
+                            Einladen
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
                 )
