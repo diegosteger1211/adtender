@@ -24,6 +24,7 @@ import PreQualPage from './pages/apps/PreQualPage'
 import TemplateStorePage from './pages/apps/TemplateStorePage'
 import RankingPage from './pages/RankingPage'
 import VergleichPage from './pages/VergleichPage'
+import ChecklistePage from './pages/ChecklistePage'
 
 export default function App() {
   return (
@@ -41,7 +42,8 @@ export default function App() {
           <Route path="/projekte/:id/einstellungen" element={<EinstellungenPage />} />
           <Route path="/projekte/:id/ranking" element={<RankingPage />} />
           <Route path="/projekte/:id/vergleich" element={<VergleichPage />} />
-          <Route path="/checkliste" element={<PlaceholderPage title="Checkliste" description="Projektspezifische Checklisten — Import per Excel." badge="Sprint 3" />} />
+          <Route path="/checkliste" element={<ProjectSelectorPage title="Checkliste" description="Excel-Checkliste hochladen und Tabellenblätter klassifizieren." targetPath="checkliste" />} />
+          <Route path="/projekte/:id/checkliste" element={<ChecklistePage />} />
           <Route path="/aufgaben" element={<PlaceholderPage title="Aufgabenliste" description="Alle Aufgaben des Projekts im Überblick." badge="Sprint 3" />} />
           <Route path="/anforderungen" element={<ProjectSelectorPage title="Anforderungen" description="Anforderungskatalog erfassen, importieren und verwalten." targetPath="anforderungen" />} />
           <Route path="/szenarien" element={<ProjectSelectorPage title="Szenarien" description="Use-Cases für die Demo-Präsentation definieren." targetPath="szenarien" />} />

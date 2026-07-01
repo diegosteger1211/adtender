@@ -15,6 +15,7 @@ import { documentRoutes } from './routes/documents'
 import { appRoutes } from './routes/apps'
 import { rankingRoutes } from './routes/ranking'
 import { comparisonRoutes } from './routes/comparison'
+import { checklistRoutes } from './routes/checklists'
 
 type Bindings = {
   DB: D1Database
@@ -64,6 +65,7 @@ app.route('/api', documentRoutes)
 app.route('/api/apps', appRoutes)
 app.route('/api/projects', rankingRoutes)
 app.route('/api/projects', comparisonRoutes)
+app.route('/api/projects', checklistRoutes)
 
 app.notFound(c => c.json({ error: 'Not found', code: 'NOT_FOUND', status: 404 }, 404))
 
