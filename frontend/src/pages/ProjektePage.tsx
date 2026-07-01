@@ -126,6 +126,15 @@ export default function ProjektePage() {
           <h1 className="text-2xl font-bold text-gray-900">Projekte | Auswahl & Anlage</h1>
           <p className="text-gray-500 mt-1 text-sm">Alle Ausschreibungsprojekte im Überblick</p>
         </div>
+        {canCreate && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Plus size={16} />
+            Neues Projekt
+          </button>
+        )}
       </div>
 
       {/* Search + Filter bar */}
