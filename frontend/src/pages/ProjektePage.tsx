@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, FolderOpen, SlidersHorizontal, Search, Loader2, X, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { Plus, FolderOpen, Search, Loader2, X, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { api } from '../lib/api'
 import { getStoredUser } from '../lib/auth'
 import type { Project } from '../types'
@@ -12,6 +12,13 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Abgebrochen',
 }
 
+const STATUS_COLORS: Record<string, string> = {
+  draft: 'bg-gray-100 text-gray-600',
+  active: 'bg-emerald-50 text-emerald-700',
+  completed: 'bg-blue-50 text-blue-700',
+  cancelled: 'bg-red-50 text-red-600',
+}
+
 const PHASE_LABELS: Record<string, string> = {
   erstellung: 'Erstellung',
   ausschreibung: 'Ausschreibung',
@@ -19,19 +26,17 @@ const PHASE_LABELS: Record<string, string> = {
   entscheidung: 'Entscheidung',
 }
 
+const PHASE_COLORS: Record<string, string> = {
+  erstellung: 'bg-blue-50 text-blue-700',
+  ausschreibung: 'bg-orange-50 text-orange-700',
+  bewertung: 'bg-purple-50 text-purple-700',
+  entscheidung: 'bg-emerald-50 text-emerald-700',
+}
+
 const CATEGORIES = [
-  'ERP-System',
-  'CRM-System',
-  'HR-Software',
-  'Projektmanagement',
-  'Dokumentenmanagement',
-  'Business Intelligence',
-  'E-Commerce',
-  'Cloud-Infrastruktur',
-  'Sicherheitslösung',
-  'MES-System',
-  'WMS-System',
-  'Sonstige',
+  'ERP-System', 'CRM-System', 'HR-Software', 'Projektmanagement',
+  'Dokumentenmanagement', 'Business Intelligence', 'E-Commerce',
+  'Cloud-Infrastruktur', 'Sicherheitslösung', 'MES-System', 'WMS-System', 'Sonstige',
 ]
 
 type NewProjectForm = {
@@ -56,13 +61,6 @@ const EMPTY_FORM: NewProjectForm = {
   phase_start_entscheidung: '', phase_end_entscheidung: '',
 }
 
-function StatusIcon({ status }: { status: string }) {
-  if (status === 'active') return <CheckCircle2 size={16} className="text-emerald-400" />
-  if (status === 'completed') return <CheckCircle2 size={16} className="text-blue-400" />
-  if (status === 'cancelled') return <XCircle size={16} className="text-red-400" />
-  return <Clock size={16} className="text-gray-500" />
-}
-
 export default function ProjektePage() {
   const navigate = useNavigate()
   const user = getStoredUser()
@@ -73,18 +71,17 @@ export default function ProjektePage() {
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState<NewProjectForm>(EMPTY_FORM)
   const [search, setSearch] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
-  const [filterStatus, setFilterStatus] = useState<string>('')
-  const [filterPhase, setFilterPhase] = useState<string>('')
 
   useEffect(() => { loadProjects() }, [])
 
   async function loadProjects() {
+    setError('')
+    setLoading(true)
     try {
       const res = await api.get<{ projects: Project[] }>('/api/projects')
       setProjects(res.projects)
     } catch {
-      setError('Projekte konnten nicht geladen werden.')
+      setError('Die Projekte konnten nicht geladen werden.')
     } finally {
       setLoading(false)
     }
@@ -106,15 +103,22 @@ export default function ProjektePage() {
     }
   }
 
+  async function deleteProject(id: string) {
+    if (!confirm('Projekt wirklich löschen?')) return
+    try {
+      await api.delete(`/api/projects/${id}`)
+      setProjects(prev => prev.filter(p => p.id !== id))
+    } catch {
+      // silent
+    }
+  }
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    return projects.filter(p => {
-      const matchSearch = !q || p.title.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)
-      const matchStatus = !filterStatus || p.status === filterStatus
-      const matchPhase = !filterPhase || p.phase === filterPhase
-      return matchSearch && matchStatus && matchPhase
-    })
-  }, [projects, search, filterStatus, filterPhase])
+    return projects.filter(p =>
+      !q || p.title.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q)
+    )
+  }, [projects, search])
 
   const canCreate = user?.role === 'admin' || user?.role === 'berater'
 
@@ -124,7 +128,7 @@ export default function ProjektePage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Projekte | Auswahl & Anlage</h1>
-          <p className="text-gray-500 mt-1 text-sm">Alle Ausschreibungsprojekte im Überblick</p>
+          <p className="text-gray-500 mt-1 text-sm">Alle Projekte im Überblick</p>
         </div>
         {canCreate && (
           <button
@@ -137,185 +141,168 @@ export default function ProjektePage() {
         )}
       </div>
 
-      {/* Search + Filter bar */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="relative flex-1 max-w-md">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Suche nach Auswahlprojekten"
-            className="w-full bg-[#141720] border border-[#1E2433] text-gray-300 placeholder-gray-600 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-          />
-          {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
-              <X size={14} />
-            </button>
-          )}
-        </div>
-        <button
-          onClick={() => setShowFilters(f => !f)}
-          className={`flex items-center gap-2 border rounded-lg px-3 py-2 text-sm transition-colors ${showFilters || filterStatus || filterPhase ? 'border-brand-500 text-brand-400 bg-brand-500/10' : 'border-[#1E2433] text-gray-400 hover:text-gray-300 bg-[#141720]'}`}
-        >
-          <SlidersHorizontal size={15} />
-          {(filterStatus || filterPhase) && <span className="w-1.5 h-1.5 bg-brand-400 rounded-full" />}
-        </button>
+      {/* Search */}
+      <div className="relative max-w-md mb-6">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Projekt oder Kunde suchen"
+          className="w-full bg-white border border-gray-200 text-gray-900 placeholder-gray-400 rounded-lg pl-9 pr-9 py-2 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+        />
+        {search && (
+          <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <X size={14} />
+          </button>
+        )}
       </div>
-
-      {/* Filter panel */}
-      {showFilters && (
-        <div className="flex items-center gap-3 mb-4 p-3 bg-[#141720] border border-[#1E2433] rounded-lg">
-          <span className="text-xs text-gray-500 font-medium">Filter:</span>
-          <select
-            value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
-            className="bg-[#0F1117] border border-[#2A3040] text-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-brand-500"
-          >
-            <option value="">Alle Status</option>
-            {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-          </select>
-          <select
-            value={filterPhase}
-            onChange={e => setFilterPhase(e.target.value)}
-            className="bg-[#0F1117] border border-[#2A3040] text-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-brand-500"
-          >
-            <option value="">Alle Phasen</option>
-            {Object.entries(PHASE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-          </select>
-          {(filterStatus || filterPhase) && (
-            <button onClick={() => { setFilterStatus(''); setFilterPhase('') }} className="text-xs text-gray-500 hover:text-gray-300 ml-1">
-              Zurücksetzen
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Content */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-gray-500" size={24} />
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="animate-spin text-gray-400" size={24} />
         </div>
       ) : error ? (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-red-400 text-sm">{error}</div>
+        <div className="text-center py-24">
+          <p className="text-gray-500 text-sm mb-4">{error}</p>
+          <button
+            onClick={loadProjects}
+            className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            Erneut laden
+          </button>
+        </div>
       ) : projects.length === 0 ? (
-        <div className="text-center py-20">
-          <FolderOpen size={48} className="text-gray-600 mx-auto mb-4" />
-          <h3 className="text-gray-300 font-medium mb-2">Noch keine Projekte</h3>
-          <p className="text-gray-500 text-sm mb-6">Erstellen Sie Ihr erstes Ausschreibungsprojekt.</p>
+        <div className="text-center py-24">
+          <FolderOpen size={40} className="text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 text-sm mb-6">Es wurden noch keine Projekte angelegt.</p>
           {canCreate && (
             <button
               onClick={() => setShowModal(true)}
               className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
               <Plus size={16} />
-              Neues Projekt anlegen
+              Neues Projekt
             </button>
           )}
         </div>
       ) : (
-        <div className="bg-[#141720] border border-[#1E2433] rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
           {/* Table header */}
-          <div className="grid grid-cols-[140px_1fr_200px_80px_110px] gap-4 px-5 py-3 border-b border-[#1E2433] text-xs font-medium text-gray-500 uppercase tracking-wide">
-            <span>Erstellt am</span>
-            <span>Titel</span>
-            <span>Tags</span>
-            <span>Status</span>
-            <span />
-          </div>
-
-          {/* Rows */}
-          {filtered.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 text-sm">Keine Projekte gefunden.</div>
-          ) : (
-            filtered.map((p, i) => (
-              <div
-                key={p.id}
-                className={`grid grid-cols-[140px_1fr_200px_80px_110px] gap-4 px-5 py-4 items-center hover:bg-[#1a2035] transition-colors ${i > 0 ? 'border-t border-[#1E2433]' : ''}`}
-              >
-                {/* Date */}
-                <span className="text-gray-400 text-sm">
-                  {new Date(p.created_at).toLocaleDateString('de-DE')}
-                </span>
-
-                {/* Title + description */}
-                <div className="min-w-0">
-                  <p className="text-white font-medium text-sm leading-tight truncate">{p.title}</p>
-                  {p.description && (
-                    <p className="text-gray-500 text-xs mt-0.5 truncate">{p.description}</p>
-                  )}
-                </div>
-
-                {/* Tags: category + phase */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {p.category && (
-                    <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 text-xs px-2 py-0.5 rounded-full">
-                      {p.category}
-                    </span>
-                  )}
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    p.phase === 'erstellung' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                    p.phase === 'ausschreibung' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
-                    p.phase === 'bewertung' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-                    'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  }`}>
-                    {PHASE_LABELS[p.phase]}
-                  </span>
-                </div>
-
-                {/* Status icon */}
-                <div className="flex items-center gap-1.5">
-                  <StatusIcon status={p.status} />
-                  <span className="text-xs text-gray-500 hidden xl:inline">{STATUS_LABELS[p.status]}</span>
-                </div>
-
-                {/* Action */}
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => navigate(`/projekte/${p.id}`)}
-                    className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition-colors"
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Projekt</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Kunde</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Phase</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Letzte Änderung</th>
+                <th className="px-5 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-gray-400 text-sm">
+                    Keine Projekte gefunden.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((p, i) => (
+                  <tr
+                    key={p.id}
+                    className={`hover:bg-gray-50 transition-colors ${i > 0 ? 'border-t border-gray-100' : ''}`}
                   >
-                    Ansehen
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+                    <td className="px-5 py-4">
+                      <p className="font-medium text-gray-900 truncate max-w-xs">{p.title}</p>
+                    </td>
+                    <td className="px-5 py-4 text-gray-500">
+                      {p.category || '—'}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                        {STATUS_LABELS[p.status] ?? p.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${PHASE_COLORS[p.phase] ?? 'bg-gray-100 text-gray-600'}`}>
+                        {PHASE_LABELS[p.phase] ?? p.phase}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-gray-500 whitespace-nowrap">
+                      {new Date(p.updated_at ?? p.created_at).toLocaleDateString('de-DE')}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => navigate(`/projekte/${p.id}`)}
+                          title="Öffnen"
+                          className="flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:text-brand-700 px-3 py-1.5 rounded-lg hover:bg-brand-50 transition-colors"
+                        >
+                          <ExternalLink size={13} />
+                          Öffnen
+                        </button>
+                        {canCreate && (
+                          <>
+                            <button
+                              onClick={() => navigate(`/projekte/${p.id}/bearbeiten`)}
+                              title="Bearbeiten"
+                              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => deleteProject(p.id)}
+                              title="Löschen"
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* Create project modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="relative bg-[#141720] border border-[#1E2433] rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-[#1E2433]">
-              <h2 className="text-white font-semibold text-lg">Neues Projekt anlegen</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-300 transition-colors">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div className="relative bg-white rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+              <h2 className="text-gray-900 font-semibold text-lg">Neues Projekt anlegen</h2>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
                 <X size={20} />
               </button>
             </div>
 
             <form onSubmit={createProject} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Projekttitel *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Projekttitel *</label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                   placeholder="z.B. ERP-Ausschreibung 2026"
                   required
-                  className="w-full bg-[#0F1117] border border-[#2A3040] text-white placeholder-gray-600 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                  className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Kategorie *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Kategorie *</label>
                 <select
                   value={form.category}
                   onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
                   required
-                  className="w-full bg-[#0F1117] border border-[#2A3040] text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                  className="w-full border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 >
                   <option value="">Kategorie wählen...</option>
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -323,18 +310,18 @@ export default function ProjektePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Beschreibung</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Beschreibung</label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="Kurze Beschreibung des Projekts und Ziele..."
                   rows={3}
-                  className="w-full bg-[#0F1117] border border-[#2A3040] text-white placeholder-gray-600 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"
+                  className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"
                 />
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-3">Phasen-Zeitplan (optional)</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Phasen-Zeitplan (optional)</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { phase: 'erstellung', label: 'Erstellung' },
@@ -342,20 +329,20 @@ export default function ProjektePage() {
                     { phase: 'bewertung', label: 'Bewertung' },
                     { phase: 'entscheidung', label: 'Entscheidung' },
                   ].map(({ phase, label }) => (
-                    <div key={phase} className="bg-[#0F1117] border border-[#1E2433] rounded-lg p-3">
+                    <div key={phase} className="border border-gray-200 rounded-lg p-3">
                       <p className="text-xs text-gray-500 mb-2 font-medium">{label}</p>
                       <div className="space-y-2">
                         <input
                           type="date"
                           value={form[`phase_start_${phase}` as keyof NewProjectForm]}
                           onChange={e => setForm(f => ({ ...f, [`phase_start_${phase}`]: e.target.value }))}
-                          className="w-full bg-[#141720] border border-[#2A3040] text-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500"
+                          className="w-full border border-gray-200 text-gray-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500"
                         />
                         <input
                           type="date"
                           value={form[`phase_end_${phase}` as keyof NewProjectForm]}
                           onChange={e => setForm(f => ({ ...f, [`phase_end_${phase}`]: e.target.value }))}
-                          className="w-full bg-[#141720] border border-[#2A3040] text-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500"
+                          className="w-full border border-gray-200 text-gray-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500"
                         />
                       </div>
                     </div>
@@ -367,7 +354,7 @@ export default function ProjektePage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 bg-[#1E2433] hover:bg-[#252D42] text-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
                 >
                   Abbrechen
                 </button>
