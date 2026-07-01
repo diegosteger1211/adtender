@@ -33,32 +33,40 @@ const PHASE_COLORS: Record<string, string> = {
   entscheidung: 'bg-emerald-50 text-emerald-700',
 }
 
-const CATEGORIES = [
-  'ERP-System', 'CRM-System', 'HR-Software', 'Projektmanagement',
-  'Dokumentenmanagement', 'Business Intelligence', 'E-Commerce',
-  'Cloud-Infrastruktur', 'Sicherheitslösung', 'MES-System', 'WMS-System', 'Sonstige',
+const PROJEKT_TYPEN = [
+  'MES / MOM', 'OT Security', 'Historian', 'APS',
+  'LIMS', 'MES + OT', 'ERP', 'Sonstiges',
 ]
 
 type NewProjectForm = {
   title: string
   category: string
   description: string
-  phase_start_erstellung: string
-  phase_end_erstellung: string
-  phase_start_ausschreibung: string
-  phase_end_ausschreibung: string
-  phase_start_bewertung: string
-  phase_end_bewertung: string
-  phase_start_entscheidung: string
-  phase_end_entscheidung: string
+  ausgangssituation: string
+  customer_company: string
+  customer_industry: string
+  customer_location: string
+  customer_country: string
+  contact_name: string
+  contact_function: string
+  contact_email: string
+  contact_phone: string
+  address_street: string
+  address_zip: string
+  address_city: string
+  address_state: string
+  address_country: string
+  project_manager: string
+  project_start: string
+  project_end: string
 }
 
 const EMPTY_FORM: NewProjectForm = {
-  title: '', category: '', description: '',
-  phase_start_erstellung: '', phase_end_erstellung: '',
-  phase_start_ausschreibung: '', phase_end_ausschreibung: '',
-  phase_start_bewertung: '', phase_end_bewertung: '',
-  phase_start_entscheidung: '', phase_end_entscheidung: '',
+  title: '', category: '', description: '', ausgangssituation: '',
+  customer_company: '', customer_industry: '', customer_location: '', customer_country: '',
+  contact_name: '', contact_function: '', contact_email: '', contact_phone: '',
+  address_street: '', address_zip: '', address_city: '', address_state: '', address_country: '',
+  project_manager: '', project_start: '', project_end: '',
 }
 
 export default function ProjektePage() {
@@ -276,6 +284,8 @@ export default function ProjektePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
           <div className="relative bg-white rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+
+            {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <h2 className="text-gray-900 font-semibold text-lg">Neues Projekt anlegen</h2>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -283,74 +293,258 @@ export default function ProjektePage() {
               </button>
             </div>
 
-            <form onSubmit={createProject} className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Projekttitel *</label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="z.B. ERP-Ausschreibung 2026"
-                  required
-                  className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-                />
-              </div>
+            <form onSubmit={createProject} className="p-6 space-y-8">
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Kategorie *</label>
-                <select
-                  value={form.category}
-                  onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                  required
-                  className="w-full border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-                >
-                  <option value="">Kategorie wählen...</option>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Beschreibung</label>
-                <textarea
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="Kurze Beschreibung des Projekts und Ziele..."
-                  rows={3}
-                  className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"
-                />
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Phasen-Zeitplan (optional)</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { phase: 'erstellung', label: 'Erstellung' },
-                    { phase: 'ausschreibung', label: 'Ausschreibung' },
-                    { phase: 'bewertung', label: 'Bewertung' },
-                    { phase: 'entscheidung', label: 'Entscheidung' },
-                  ].map(({ phase, label }) => (
-                    <div key={phase} className="border border-gray-200 rounded-lg p-3">
-                      <p className="text-xs text-gray-500 mb-2 font-medium">{label}</p>
-                      <div className="space-y-2">
-                        <input
-                          type="date"
-                          value={form[`phase_start_${phase}` as keyof NewProjectForm]}
-                          onChange={e => setForm(f => ({ ...f, [`phase_start_${phase}`]: e.target.value }))}
-                          className="w-full border border-gray-200 text-gray-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500"
-                        />
-                        <input
-                          type="date"
-                          value={form[`phase_end_${phase}` as keyof NewProjectForm]}
-                          onChange={e => setForm(f => ({ ...f, [`phase_end_${phase}`]: e.target.value }))}
-                          className="w-full border border-gray-200 text-gray-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-brand-500"
-                        />
-                      </div>
-                    </div>
-                  ))}
+              {/* ── Projektinformationen ── */}
+              <section>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Projektinformationen</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Projektname *</label>
+                    <input
+                      type="text"
+                      value={form.title}
+                      onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                      placeholder="z.B. MES-Ausschreibung 2026"
+                      required
+                      className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Projekttyp *</label>
+                    <select
+                      value={form.category}
+                      onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                      required
+                      className="w-full border border-gray-300 text-gray-900 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                    >
+                      <option value="">Projekttyp wählen...</option>
+                      {PROJEKT_TYPEN.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Projektziel</label>
+                    <textarea
+                      value={form.description}
+                      onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                      placeholder="Was soll mit diesem Projekt erreicht werden?"
+                      rows={2}
+                      className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Ausgangssituation</label>
+                    <textarea
+                      value={form.ausgangssituation}
+                      onChange={e => setForm(f => ({ ...f, ausgangssituation: e.target.value }))}
+                      placeholder="Wie ist die aktuelle Situation beim Kunden?"
+                      rows={2}
+                      className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"
+                    />
+                  </div>
                 </div>
-              </div>
+              </section>
 
-              <div className="flex gap-3 pt-2">
+              {/* ── Kunde ── */}
+              <section>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Kunde</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Unternehmen *</label>
+                    <input
+                      type="text"
+                      value={form.customer_company}
+                      onChange={e => setForm(f => ({ ...f, customer_company: e.target.value }))}
+                      placeholder="Firmenname"
+                      className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Branche</label>
+                    <input
+                      type="text"
+                      value={form.customer_industry}
+                      onChange={e => setForm(f => ({ ...f, customer_industry: e.target.value }))}
+                      placeholder="z.B. Automotive, Pharma, Chemie"
+                      className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Standort</label>
+                      <input
+                        type="text"
+                        value={form.customer_location}
+                        onChange={e => setForm(f => ({ ...f, customer_location: e.target.value }))}
+                        placeholder="Stadt / Werk"
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Land</label>
+                      <input
+                        type="text"
+                        value={form.customer_country}
+                        onChange={e => setForm(f => ({ ...f, customer_country: e.target.value }))}
+                        placeholder="z.B. Deutschland"
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Primärer Ansprechpartner ── */}
+              <section>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Primärer Ansprechpartner</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Name</label>
+                      <input
+                        type="text"
+                        value={form.contact_name}
+                        onChange={e => setForm(f => ({ ...f, contact_name: e.target.value }))}
+                        placeholder="Vor- und Nachname"
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Funktion</label>
+                      <input
+                        type="text"
+                        value={form.contact_function}
+                        onChange={e => setForm(f => ({ ...f, contact_function: e.target.value }))}
+                        placeholder="z.B. IT-Leiter, Projektleiter"
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">E-Mail</label>
+                      <input
+                        type="email"
+                        value={form.contact_email}
+                        onChange={e => setForm(f => ({ ...f, contact_email: e.target.value }))}
+                        placeholder="name@unternehmen.de"
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefon</label>
+                      <input
+                        type="tel"
+                        value={form.contact_phone}
+                        onChange={e => setForm(f => ({ ...f, contact_phone: e.target.value }))}
+                        placeholder="+49 ..."
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Anschrift ── */}
+              <section>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Anschrift</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Straße</label>
+                    <input
+                      type="text"
+                      value={form.address_street}
+                      onChange={e => setForm(f => ({ ...f, address_street: e.target.value }))}
+                      placeholder="Straße und Hausnummer"
+                      className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">PLZ</label>
+                      <input
+                        type="text"
+                        value={form.address_zip}
+                        onChange={e => setForm(f => ({ ...f, address_zip: e.target.value }))}
+                        placeholder="12345"
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Ort</label>
+                      <input
+                        type="text"
+                        value={form.address_city}
+                        onChange={e => setForm(f => ({ ...f, address_city: e.target.value }))}
+                        placeholder="Stadt"
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Bundesland</label>
+                      <input
+                        type="text"
+                        value={form.address_state}
+                        onChange={e => setForm(f => ({ ...f, address_state: e.target.value }))}
+                        placeholder="z.B. NRW, Bayern"
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Land</label>
+                      <input
+                        type="text"
+                        value={form.address_country}
+                        onChange={e => setForm(f => ({ ...f, address_country: e.target.value }))}
+                        placeholder="z.B. Deutschland"
+                        className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Projekt ── */}
+              <section>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Projekt</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Projektleiter</label>
+                    <input
+                      type="text"
+                      value={form.project_manager}
+                      onChange={e => setForm(f => ({ ...f, project_manager: e.target.value }))}
+                      placeholder="Name des verantwortlichen Projektleiters"
+                      className="w-full border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Geplanter Projektstart</label>
+                      <input
+                        type="date"
+                        value={form.project_start}
+                        onChange={e => setForm(f => ({ ...f, project_start: e.target.value }))}
+                        className="w-full border border-gray-300 text-gray-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Geplantes Projektende</label>
+                      <input
+                        type="date"
+                        value={form.project_end}
+                        onChange={e => setForm(f => ({ ...f, project_end: e.target.value }))}
+                        className="w-full border border-gray-300 text-gray-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Buttons ── */}
+              <div className="flex gap-3 pt-2 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
@@ -366,6 +560,7 @@ export default function ProjektePage() {
                   {creating ? <Loader2 size={16} className="animate-spin" /> : 'Projekt anlegen'}
                 </button>
               </div>
+
             </form>
           </div>
         </div>
