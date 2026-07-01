@@ -5,28 +5,28 @@ interface AdtenderLogoProps {
 export default function AdtenderLogo({ className = 'h-10' }: AdtenderLogoProps) {
   return (
     <svg
-      viewBox="0 0 720 130"
+      viewBox="0 0 780 130"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       style={{ width: 'auto', display: 'block' }}
     >
       <defs>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@700&display=swap');`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&display=swap');`}</style>
       </defs>
       <text
         x="10"
-        y="95"
-        fontFamily="'Source Sans 3', 'Source Sans Pro', Arial, sans-serif"
-        fontSize="90"
-        fontWeight="700"
-        fill="#1E7DC4"
+        y="98"
+        fontFamily="'Nunito', 'Source Sans 3', Arial, sans-serif"
+        fontSize="92"
+        fontWeight="800"
+        fill="#1B75BB"
         letterSpacing="-1"
       >
         adtender
       </text>
-      {/* adesso-style bracket: vertical line + diagonal foot (no top tick) */}
-      <line x1="660" y1="18" x2="660" y2="90" stroke="#8B7F72" strokeWidth="5" strokeLinecap="round" />
-      <line x1="660" y1="90" x2="630" y2="122" stroke="#8B7F72" strokeWidth="5" strokeLinecap="round" />
+      {/* adesso 1:1: vertical line + diagonal foot, right of text */}
+      <line x1="720" y1="22" x2="720" y2="92" stroke="#9E9286" strokeWidth="6" strokeLinecap="round" />
+      <line x1="720" y1="92" x2="686" y2="128" stroke="#9E9286" strokeWidth="6" strokeLinecap="round" />
     </svg>
   )
 }
