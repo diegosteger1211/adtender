@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AdtenderLogo from '../AdtenderLogo'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   FolderOpen, CheckSquare, ListTodo, FileText, Film, Package,
@@ -119,7 +120,7 @@ export default function Sidebar({ user }: SidebarProps) {
     <aside className="w-60 flex-shrink-0 bg-[#0F1117] border-r border-[#1E2433] flex flex-col h-screen sticky top-0">
       {/* Logo */}
       <div className="px-5 py-4 border-b border-[#1E2433]">
-        <img src="/adtender-logo.svg" alt="adtender" className="h-7 w-auto" />
+        <AdtenderLogo className="h-7" />
       </div>
 
       {/* Navigation */}
