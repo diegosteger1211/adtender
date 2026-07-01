@@ -116,9 +116,9 @@ export default function Sidebar({ user }: SidebarProps) {
   }
 
   return (
-    <aside className="w-60 flex-shrink-0 bg-[#006EC7] flex flex-col h-screen sticky top-0">
+    <aside className="w-60 flex-shrink-0 bg-[#0F1117] border-r border-[#1E2433] flex flex-col h-screen sticky top-0">
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-white/20">
+      <div className="px-4 py-5 border-b border-[#1E2433]">
         <img src="/adesso-logo.png" alt="adtender" className="h-20 w-auto" />
       </div>
 
@@ -130,12 +130,12 @@ export default function Sidebar({ user }: SidebarProps) {
               onClick={() => toggleGroup(group.label)}
               className="w-full flex items-center justify-between px-2 py-1.5 mb-0.5 group"
             >
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-white/50 group-hover:text-white/80 transition-colors">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-600 group-hover:text-gray-400 transition-colors">
                 {group.label}
               </span>
               {collapsed[group.label]
-                ? <ChevronRight size={12} className="text-white/50" />
-                : <ChevronDown size={12} className="text-white/50" />
+                ? <ChevronRight size={12} className="text-gray-600" />
+                : <ChevronDown size={12} className="text-gray-600" />
               }
             </button>
 
@@ -149,8 +149,8 @@ export default function Sidebar({ user }: SidebarProps) {
                       clsx(
                         'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-100',
                         isActive
-                          ? 'bg-white/20 text-white font-semibold'
-                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                          ? 'bg-brand-500/10 text-brand-400 font-medium'
+                          : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                       )
                     }
                   >
@@ -165,10 +165,10 @@ export default function Sidebar({ user }: SidebarProps) {
       </nav>
 
       {/* User profile */}
-      <div className="px-3 py-4 border-t border-white/20">
+      <div className="px-3 py-4 border-t border-[#1E2433]">
         <button
           onClick={() => navigate('/profil')}
-          className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/10 transition-colors text-left"
+          className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
         >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-semibold">
@@ -176,7 +176,7 @@ export default function Sidebar({ user }: SidebarProps) {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{user.name}</p>
+            <p className="text-sm font-medium text-gray-200 truncate">{user.name}</p>
             <span className={clsx('text-[10px] font-medium px-1.5 py-0.5 rounded-full', getRoleColor(user.role))}>
               {getRoleLabel(user.role)}
             </span>
@@ -185,7 +185,7 @@ export default function Sidebar({ user }: SidebarProps) {
         <button
           onClick={handleLogout}
           title="Abmelden"
-          className="w-full flex items-center gap-2 px-2 py-2 mt-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10 text-xs transition-colors"
+          className="w-full flex items-center gap-2 px-2 py-2 mt-1 rounded-lg text-gray-600 hover:text-gray-300 hover:bg-white/5 text-xs transition-colors"
         >
           <LogOut size={13} />
           Abmelden

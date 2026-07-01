@@ -52,7 +52,7 @@ export default function DashboardPage() {
     <div className="p-8 max-w-6xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-white">
           {greeting}, {user?.name.split(' ')[0]}
         </h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -69,12 +69,12 @@ export default function DashboardPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {stats.map(s => (
-              <div key={s.label} className={`bg-white rounded-xl border p-5 flex items-center gap-4 shadow-sm ${s.bg}`}>
+              <div key={s.label} className={`bg-[#141720] rounded-xl border p-5 flex items-center gap-4 ${s.bg}`}>
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${s.color} bg-black/20`}>
                   {s.icon}
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+                  <p className="text-2xl font-bold text-white">{s.value}</p>
                   <p className="text-xs text-gray-500 leading-tight mt-0.5">{s.label}</p>
                 </div>
               </div>
@@ -85,7 +85,7 @@ export default function DashboardPage() {
             {/* Recent projects */}
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-gray-900">Letzte Projekte</h2>
+                <h2 className="text-base font-semibold text-white">Letzte Projekte</h2>
                 <button
                   onClick={() => navigate('/projekte')}
                   className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1 font-medium transition-colors"
@@ -95,7 +95,7 @@ export default function DashboardPage() {
               </div>
 
               {recentProjects.length === 0 ? (
-                <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
+                <div className="bg-[#141720] border border-[#1E2433] rounded-xl p-8 text-center">
                   <FileText size={36} className="text-gray-600 mx-auto mb-3" />
                   <p className="text-gray-400 text-sm mb-1">Noch keine Projekte</p>
                   <button
@@ -111,12 +111,12 @@ export default function DashboardPage() {
                     <div
                       key={p.id}
                       onClick={() => navigate(`/projekte/${p.id}`)}
-                      className="bg-white border border-gray-200 hover:border-[#006EC7]/40 rounded-xl p-5 cursor-pointer transition-all group"
+                      className="bg-[#141720] border border-[#1E2433] hover:border-[#2A3347] rounded-xl p-5 cursor-pointer transition-all group"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-gray-900 text-sm font-semibold truncate group-hover:text-[#006EC7] transition-colors">
+                            <h3 className="text-white text-sm font-semibold truncate group-hover:text-brand-400 transition-colors">
                               {p.title}
                             </h3>
                             <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${PHASE_COLORS[p.phase]}`}>
@@ -144,7 +144,7 @@ export default function DashboardPage() {
             {/* Supplier DB snapshot */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-gray-900">Anbieter-Datenbank</h2>
+                <h2 className="text-base font-semibold text-white">Anbieter-Datenbank</h2>
                 <button
                   onClick={() => navigate('/system/anbieter')}
                   className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1 font-medium transition-colors"
@@ -154,7 +154,7 @@ export default function DashboardPage() {
               </div>
 
               {suppliers.length === 0 ? (
-                <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                <div className="bg-[#141720] border border-[#1E2433] rounded-xl p-6 text-center">
                   <Building2 size={32} className="text-gray-600 mx-auto mb-2" />
                   <p className="text-gray-500 text-sm mb-2">Noch keine Anbieter</p>
                   <button
@@ -165,14 +165,14 @@ export default function DashboardPage() {
                   </button>
                 </div>
               ) : (
-                <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+                <div className="bg-[#141720] border border-[#1E2433] rounded-xl divide-y divide-[#1E2433]">
                   {suppliers.slice(0, 6).map(s => (
                     <div key={s.id} className="px-4 py-3 flex items-center gap-3">
                       <div className="w-7 h-7 bg-brand-500/10 border border-brand-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Building2 size={13} className="text-brand-400" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-gray-900 text-xs font-medium truncate">{s.company_name}</p>
+                        <p className="text-white text-xs font-medium truncate">{s.company_name}</p>
                         <p className="text-gray-600 text-[11px] truncate">{s.contact_email}</p>
                       </div>
                     </div>
