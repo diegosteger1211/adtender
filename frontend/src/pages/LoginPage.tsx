@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
-import AdtenderLogo from '../components/AdtenderLogo'
 import { storeUser } from '../lib/auth'
 import { api, storeToken } from '../lib/api'
 import type { Role } from '../types'
@@ -64,7 +63,7 @@ export default function LoginPage() {
         />
         {/* Logo */}
         <div className="relative z-10">
-          <AdtenderLogo className="h-20" />
+          <img src="/adesso-logo.png" alt="adtender" className="h-20 w-auto" />
         </div>
 
         {/* Center content */}
@@ -109,7 +108,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile logo */}
           <div className="lg:hidden mb-10">
-            <AdtenderLogo className="h-10" />
+            <img src="/adesso-logo.png" alt="adtender" className="h-10 w-auto" />
           </div>
 
           <div className="mb-8">
