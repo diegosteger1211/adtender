@@ -10,10 +10,13 @@ export default function AdtenderLogo({ className = 'h-10' }: AdtenderLogoProps) 
       className={className}
       style={{ width: 'auto', display: 'block' }}
     >
+      <defs>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@700&display=swap');`}</style>
+      </defs>
       <text
         x="0"
         y="84"
-        fontFamily="'Source Sans 3', 'Source Sans Pro', 'Frutiger', 'Myriad Pro', Arial, sans-serif"
+        fontFamily="'Source Sans 3', 'Source Sans Pro', Arial, sans-serif"
         fontSize="82"
         fontWeight="700"
         fill="#1A6DB5"
