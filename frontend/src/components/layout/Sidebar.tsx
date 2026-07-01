@@ -118,8 +118,8 @@ export default function Sidebar({ user }: SidebarProps) {
   return (
     <aside className="w-60 flex-shrink-0 bg-[#006EC7] flex flex-col h-screen sticky top-0">
       {/* Logo */}
-      <div className="px-5 py-4 border-b border-white/20">
-        <img src="/adesso-logo.png" alt="adtender" className="h-7 w-auto" />
+      <div className="px-4 py-5 border-b border-white/20">
+        <img src="/adesso-logo.png" alt="adtender" className="h-20 w-auto" />
       </div>
 
       {/* Navigation */}
