@@ -123,18 +123,9 @@ export default function ProjektePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Auswahlprojekte</h1>
-          <p className="text-gray-400 mt-1 text-sm">Alle Ausschreibungsprojekte im Überblick</p>
+          <h1 className="text-2xl font-bold text-gray-900">Projekte | Auswahl & Anlage</h1>
+          <p className="text-gray-500 mt-1 text-sm">Alle Ausschreibungsprojekte im Überblick</p>
         </div>
-        {canCreate && (
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <Plus size={16} />
-            Neues Projekt
-          </button>
-        )}
       </div>
 
       {/* Search + Filter bar */}
