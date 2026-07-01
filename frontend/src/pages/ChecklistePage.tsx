@@ -149,7 +149,7 @@ export default function ChecklistePage() {
         body: fd,
       })
       if (!res.ok) throw new Error('Upload fehlgeschlagen.')
-      const { id } = await res.json<{ id: string }>()
+      const { id } = await res.json() as { id: string }
 
       // 2. Save classifications
       await api.put(`/api/projects/${projectId}/checklists/${id}/classify`, {
